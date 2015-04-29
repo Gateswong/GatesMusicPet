@@ -52,4 +52,17 @@ section `default`, the tag will equals the value if CUE don't have that field. F
 the section `overwrite`, the tag will always equals to the value in the extra data
 file.
 
+``` python
+FILES_TO_COPY = ["Booklet.zip"]
+```
+
+If you have extra files to copy to destination folder, put them here.
+
+``` python
+DELETE_TARGET_DIR = False
+```
+
+If this is `True`, the destination folder (typically `OUTPUT_PREFIX/subfolder`) will be 
+clean before start converting.
+
 
