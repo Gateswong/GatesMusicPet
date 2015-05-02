@@ -2,3 +2,6 @@
 
 *.swp
 .ropeproject
+GatesMusicPet.wpr
+GatesMusicPet.wpu
+*.pyc
