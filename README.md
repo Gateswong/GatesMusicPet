@@ -18,6 +18,17 @@ Install all python dependencies:
 pip install -r requirements.txt
 ```
 
+You can create a `virtualenv` as an isolated environment to install
+the python packages:
+
+``` shell
+pip install virtualenv  # If you didn't installed before.
+virtualenv env
+source env/bin/activate
+# here you are in virtualenv
+pip install -r requirements.txt
+```
+
 ### Known BUG
 
 Windows and Linux environments are not tested.
