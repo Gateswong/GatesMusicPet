@@ -10,8 +10,6 @@ Please see folder `ipynb` for details.
 
 Install `ffmpeg` at [here](https://www.ffmpeg.org/download.html).
 
-Install `bchunk` at [here](http://he.fi/bchunk/).
-
 Install `flac` at [here](https://xiph.org/flac/download.html).
 
 Install all python dependencies:
@@ -22,10 +20,12 @@ pip install -r requirements.txt
 
 ### Known BUG
 
-This is not run in Windows currently.
+Windows and Linux environments are not tested.
 
 ### Following Plan
 
-1. Create python package for the converter
-2. A manager with web interface, which can do search and mass copy to devices.
+1. Create a module for FLAC helper class, which handles the parameter for the converting.
+2. Modify the CUE class to a general Meta class, and it can load a CUE file.
+3. Make this a site-package, with setup.py or something similar.
+4. A manager with web interface, which can do search and mass copy to devices.
 
