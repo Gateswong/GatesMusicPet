@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 from collections import defaultdict
+from ConfigParser import ConfigParser
 
 from .utils import trim_quote, to_unicode
 
@@ -132,6 +133,51 @@ class CUE:
                                     "Line not recognized",
                                     textline))
         self.meta[u"0"][u"tracktotal"] = unicode(self.current_track)
+
+
+class ExtraInfo:
+
+    def __init__(self, filename):
+        self.infofile = unicode(filename)
+        self.extrainfo = defaultdict(dict)
+
+        self._parse()
+
+    def update_meta(self, meta):
+        if meta is None:
+            return
+
+        if type(meta) != defaultdict:
+            raise ValueError("The meta shall be the instance of defaultdict")
+
+        for track in meta:
+            for sec in [u"default", u"overwrite", u"append"]:
+                if track != u"0":
+                    section = u"%s:%s" % (sec, track)
+                else:
+                    section = sec
+
+                if section not in self.extrainfo:
+                    continue
+
+                for option, value in self.extrainfo[section].items():
+                    if (sec == u"default" and option not in meta[track]) or sec == u"overwrite":
+                        meta[track][option] = value
+                    elif sec == u"append":
+                        if option not in meta[track]:
+                            meta[track][option] = value
+                        else:
+                            meta[track][option] += ", %s" % value
+
+        return
+
+    def _parse(self):
+        config = ConfigParser()
+        config.read(self.infofile)
+
+        for section in config.sections():
+            for option in config.options(section):
+                self.extrainfo[to_unicode(section.lower())][to_unicode(option.lower())] = to_unicode(config.get(section, option))
 
 
 

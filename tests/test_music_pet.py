@@ -2,7 +2,7 @@
 import unittest
 import os
 
-from music_pet.cue import CUE
+from music_pet.meta import CUE
 
 
 class TestOnParseCUEFile(unittest.TestCase):
