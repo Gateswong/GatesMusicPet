@@ -29,7 +29,48 @@ class CUE:
         self.errors = []
         self._parse()
 
+    def has_album_tag(self, field):
+        field = to_unicode(field)
+        return field in self.meta[u"0"]
+
+    def get_album_tag(self, field):
+        field = to_unicode(field)
+        return self.meta[u"0"][field]
+
+    def has_track_tag(self, field, track_num):
+        field = to_unicode(field)
+        track = to_unicode(track_num)
+        return track in self.meta and field in self.meta[track]
+
+    def get_track_tag(self, field, track_num):
+        field = to_unicode(field)
+        track = to_unicode(track_num)
+        return self.meta[track][field]
+
+    def has_tag(self, field, track_num):
+        return self.has_album_tag(field) or self.has_track_tag(field, track_num)
+
+    def get_tag(self, field, track_num):
+        if self.has_track_tag(field, track_num):
+            return self.get_track_tag(field, track_num)
+        return self.get_album_tag(field)
+
+    def list_album_tags(self):
+        return self.meta[u"0"].keys()
+
+    def list_track_tags(self, track_num):
+        track = to_unicode(track_num)
+        if track in self.meta:
+            return self.meta[track].keys()
+        return []
+
+    def list_tags(self, track_num):
+        return list(set(self.list_album_tags() + self.list_track_tags(track_num)))
+
     def details(self):
+        """
+        Return a string that contains all the info in this meta
+        """
         s = u""
         for track, track_meta in sorted(self.meta.items(), key=lambda x: int(x[0])):
             if track == u"0":
