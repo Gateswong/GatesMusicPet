@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from codecs import decode
+import os
+from codecs import encode, decode
 
 
 def trim_quote(text):
@@ -29,4 +30,16 @@ def remove_bom(input_filename, output_filename):
     fo.close()
     fp.close()
 
+
+def iconv_file(input_filename, output_filename, encoding, overwrite=False):
+    fp = open(input_filename, "rb")
+    ansi_content = fp.read()
+    fp.close()
+    if not overwrite:
+        if os.path.exists(output_filename):
+            return
+    with open(output_filename, "w") as fp:
+        fp.write(encode(
+            decode(ansi_content, encoding),
+            "utf-8"))
 
