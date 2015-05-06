@@ -43,3 +43,15 @@ def iconv_file(input_filename, output_filename, encoding, overwrite=False):
             decode(ansi_content, encoding),
             "utf-8"))
 
+
+def filename_safe(filename):
+    for ch in u'''<>'"?*\\/:''':
+        filename = filename.replace(ch, u"_")
+    return filename.strip()
+
+
+def cli_escape(text):
+    for ch in u'''"''':
+        text.replace(ch, u'''\\%s''' % ch)
+    return text
+
