@@ -15,6 +15,9 @@ def print_dir_meta():
     if args.folder is None:
         args.folder = u"."
 
+    if args.C is None:
+        args.C = u"utf8"
+
     all_files = os.listdir(args.folder)
     utf8_cue_files = filter(lambda f: f.endswith(".utf8.cue"),
                             all_files)
