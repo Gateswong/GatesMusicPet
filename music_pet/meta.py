@@ -8,8 +8,13 @@ from .utils import trim_quote, to_unicode, remove_bom, iconv_file
 from .exc import InvalidTag
 
 __all__ = ["Meta", "Track", "Album", "AlbumList",
-           "parse_cue"]
+           "parse_cue", "DEFAULT", "OVERWRITE", "APPEND"]
 
+TAG_UPDATE_MODE = u"@music_pet:update_mode"
+
+DEFAULT = 0
+OVERWRITE = 1
+APPEND = 2
 
 u = to_unicode
 
@@ -44,6 +49,27 @@ class Meta:
 
     def list_tag(self):
         return filter(lambda t: self.data[u(t)] is not None, self.data.keys())
+
+    def update(self, data, mode=DEFAULT):
+        """
+        mode is one of DEFAULT, OVERWRITE and APPEND
+        """
+        if data.has_tag(TAG_UPDATE_MODE):
+            mode = int(data.get_tag(TAG_UPDATE_MODE))
+        for tag in data.list_tag():
+            if tag == TAG_UPDATE_MODE: continue
+            if mode == DEFAULT and not self.has_tag(tag):
+                self.set_tag(tag, data.get_tag(tag))
+            elif mode == OVERWRITE:
+                self.set_tag(tag, data.get_tag(tag))
+            elif mode == APPEND and not self.has_tag(tag):
+                self.set_tag(tag, data.get_tag(tag))
+            elif mode == APPEND:
+                self.set_tag(tag,
+                             u"%s, %s" % (
+                                 self.get_tag(tag),
+                                 data.get_tag(tag)
+                             ))
 
     def detail(self):
         lines = []
@@ -188,17 +214,28 @@ class Album(list):
 
     def update_track_tag(self, track_num, tag, value):
         for track in self:
-            if not track.has_tag(u"tracknum"):
+            if not track.has_tag(u"tracknumber"):
                 continue
-            if track.tracknum == u(track_num):
+            if track.tracknumber == u(track_num):
                 track.set_tag(tag, value)
 
     def get_track(self, track_num):
         for track in self:
-            if not track.has_tag(u"tracknum"):
+            if not track.has_tag(u"tracknumber"):
                 continue
-            if track.tracknum == u(track_num):
+            if track.tracknumber == u(track_num):
                 return track
+
+    def update_track(self, track_num, meta, mode=DEFAULT):
+        for track in self:
+            if not track.has_tag(u"tracknumber"):
+                continue
+            if track.tracknumber == u(track_num):
+                track.update(meta, mode)
+
+    def update_all_tracks(self, meta, mode=DEFAULT):
+        for track in self:
+            track.update(meta, mode)
 
     def detail(self):
         lines = [u"==== Album : %s ====" % self.name]
@@ -258,12 +295,37 @@ def parse_cue(filename, encoding=None):
     The CUE file shall be UTF-8 without BOM"
     """
     filename = _cue_format_convert(filename, encoding=encoding)
-    state = {}
+    states = []
     textline = ""
     al = AlbumList()
 
     def _m(match, key):
         return trim_quote(match.groupdict()[key].strip())
+
+    def _extract_meta(tag):
+        newmeta = Track()
+        for s in states:
+            newmeta.set_tag(s[0], s[1])
+        while len(states) > 0:
+            if states[-1][0] == tag:
+                break
+            states.pop()
+        if len(states) > 1:
+            states.pop()
+        al.add_track(newmeta)
+
+    def _push(tag, value):
+        for s in states:
+            if tag == s[0] and tag in [u"original_file", u"tracknumber"]:
+                _extract_meta(tag)
+                break
+        states.append((tag, value))
+
+    def _has_tag(tag):
+        for x in states:
+            if x[0] == tag:
+                return True
+        return False
 
     def _match_rem():
         r = re.search('''REM\s+(?P<rem_tag>[^\s]+)\s+(?P<rem_value>.+)''',
@@ -274,7 +336,7 @@ def parse_cue(filename, encoding=None):
         _tag = u(_m(r, "rem_tag")).lower()
         _value = u(_m(r, "rem_value"))
 
-        state[_tag] = _value
+        _push(_tag, _value)
         return True
 
     def _match_performer():
@@ -285,10 +347,10 @@ def parse_cue(filename, encoding=None):
 
         _perf = u(_m(r, "performer"))
 
-        if u"tracknumber" not in state:
-            state[u"albumartist"] = _perf
+        if not _has_tag(u"tracknumber"):
+            _push(u"albumartist", _perf)
         else:
-            state[u"artist"] = _perf
+            _push(u"artist", _perf)
         return True
 
     def _match_title():
@@ -299,10 +361,10 @@ def parse_cue(filename, encoding=None):
 
         _title = u(_m(r, "title"))
 
-        if u"tracknumber" not in state:
-            state[u"album"] = _title
+        if not _has_tag(u"tracknumber"):
+            _push(u"album", _title)
         else:
-            state[u"title"] = _title
+            _push(u"title", _title)
         return True
 
     def _match_file():
@@ -311,12 +373,9 @@ def parse_cue(filename, encoding=None):
 
         if not r: return False
 
-        # File changed, create track if necessary
-        if _ready(): _gen_track()
-
         _file = u(_m(r, "file"))
 
-        state[u"original_file"] = _file
+        _push(u"original_file", _file)
         return True
 
     def _match_track():
@@ -325,12 +384,9 @@ def parse_cue(filename, encoding=None):
 
         if not r: return False
 
-        # Track changed, create track if necessary
-        if _ready(): _gen_track()
-
         _track = u(_m(r, "track_num"))
 
-        state[u"tracknumber"] = _track
+        _push(u"tracknumber", _track)
         return True
 
     def _match_index():
@@ -342,23 +398,8 @@ def parse_cue(filename, encoding=None):
         _index_num = u(_m(r, "index_num"))
         _timing = u(_m(r, "timing"))
 
-        state[u"index_%s" % _index_num] = _timing
+        _push(u"index_%s" % _index_num, _timing)
         return True
-
-    def _ready():
-        return u"index_01" in state
-
-    def _gen_track():
-        track = Track()
-        for k, v in state.items():
-            track.set_tag(k, v)
-        al.add_track(track)
-        for k in [u"tracknumber", u"title", u"artist",
-                  u"index_00", u"index_01"]:
-            try:
-                del state[k]
-            except KeyError:
-                pass
 
     fp = open(filename, "r")
     for textline in fp:
@@ -369,10 +410,33 @@ def parse_cue(filename, encoding=None):
         if _match_title(): continue
         if _match_track(): continue
 
-    if _ready(): _gen_track()
+    _extract_meta(0)
 
     fp.close()
     return al
+
+
+def parse_ini(filename):
+    cp = ConfigParser()
+    cp.read(filename)
+
+    metas = []
+
+    sections = cp.sections()
+    for section in sections:
+        if section.startswith(u"default"): mode = DEFAULT
+        elif section.startswith(u"overwrite"): mode = OVERWRITE
+        elif section.startswith(u"append"): mode = APPEND
+
+        meta = Meta()
+        meta.set_tag(TAG_UPDATE_MODE, u(mode))
+
+        for option in cp.options(section):
+            meta.set_tag(u(option), u(cp.get(section, option)))
+
+        metas.append(meta)
+
+    return metas
 
 
 def _cue_format_convert(filename, encoding=None):

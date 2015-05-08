@@ -47,6 +47,9 @@ class FLAC(AudioFile, PictureMixin):
         # Set Quality
         arguments.append(u'''--best''')
 
+        # Verify the result
+        arguments.append(u'''-V''')
+
         # Input File
         arguments.append(u'''%s''' % self.metadata.get_tag(u"@input_fullpath"))
 

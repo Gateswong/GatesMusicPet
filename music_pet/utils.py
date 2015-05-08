@@ -39,9 +39,12 @@ def iconv_file(input_filename, output_filename, encoding, overwrite=False):
         if os.path.exists(output_filename):
             return
     with open(output_filename, "w") as fp:
-        fp.write(encode(
-            decode(ansi_content, encoding),
-            "utf-8"))
+        if encoding.lower() in ["utf8", "utf-8", "u8", "utf", "utf_8"]:
+            fp.write(ansi_content)
+        else:
+            fp.write(encode(
+                decode(ansi_content, encoding),
+                "utf8"))
 
 
 def filename_safe(filename):
