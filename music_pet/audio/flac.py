@@ -1,8 +1,17 @@
 # -*- coding: utf-8 -*-
 
-from . import AudioFile, PictureMixin
+__all__ = [
+    "FLAC",
+]
 
-from ..utils import *
+import re
+
+from .base import AudioFile, PictureMixin
+
+from ..utils import (
+    to_unicode as u,
+    cli_escape,
+)
 
 
 class FLAC(AudioFile, PictureMixin):
@@ -33,7 +42,7 @@ class FLAC(AudioFile, PictureMixin):
             if not tag.startswith(u"@"):
                 arguments.append(u'''--tag="%s"="%s"''' %
                                  (tag,
-                                  cli.escape(self.metadata.get_tag(tag))))
+                                  cli_escape(self.metadata.get_tag(tag))))
 
         # Attach pictures
         if self.cover_picture is not None:
@@ -57,6 +66,20 @@ class FLAC(AudioFile, PictureMixin):
         return u" ".join(arguments)
 
 
+def cue_index_to_flac_time(timestr):
+    """
+    This function converts the time string in CUE file to the format that FLAC accepts.
+
+    Time string in CUE file:  00:00:00
+
+    Time string in FLAC file: 00:00.00
+    """
+    r = re.match(u'''(\d+:\d{2}):(\d{2})''', timestr)
+    if r is None:
+        raise ValueError("Invalid time string: %s" % timestr)
+
+    g = r.groups()
+    return u'''%s.%s''' % (g[0], g[1])
 
 
 
