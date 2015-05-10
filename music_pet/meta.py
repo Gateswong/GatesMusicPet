@@ -7,8 +7,17 @@ from ConfigParser import ConfigParser
 from .utils import trim_quote, to_unicode, remove_bom, iconv_file
 from .exc import InvalidTag
 
-__all__ = ["Meta", "Track", "Album", "AlbumList",
-           "parse_cue", "DEFAULT", "OVERWRITE", "APPEND"]
+__all__ = [
+    "Meta",
+    "Track",
+    "Album",
+    "AlbumList",
+    "parse_cue",
+    "parse_ini",
+    "DEFAULT",
+    "OVERWRITE",
+    "APPEND",
+]
 
 TAG_UPDATE_MODE = u"@music_pet:update_mode"
 
@@ -212,30 +221,19 @@ class Album(list):
         for track in self:
             track.set_tag(tag, value)
 
-    def update_track_tag(self, track_num, tag, value):
-        for track in self:
-            if not track.has_tag(u"tracknumber"):
-                continue
-            if track.tracknumber == u(track_num):
-                track.set_tag(tag, value)
-
     def get_track(self, track_num):
         for track in self:
             if not track.has_tag(u"tracknumber"):
                 continue
             if track.tracknumber == u(track_num):
                 return track
-
-    def update_track(self, track_num, meta, mode=DEFAULT):
-        for track in self:
-            if not track.has_tag(u"tracknumber"):
-                continue
-            if track.tracknumber == u(track_num):
-                track.update(meta, mode)
+        return None
 
     def update_all_tracks(self, meta, mode=DEFAULT):
         for track in self:
             track.update(meta, mode)
+        if meta.has_tag(u"album"):
+            self.name = meta.get_tag(u"album")
 
     def detail(self):
         lines = [u"==== Album : %s ====" % self.name]
@@ -288,6 +286,17 @@ class AlbumList(dict):
             self[track.album].append(track)
         else:
             self[track.album] = Album(track.album, [track])
+
+    def fix_album_names(self):
+        changed_keys = set()
+
+        for key in self.keys():
+            if self[key].name != key:
+                changed_keys.add(key)
+
+        for key in changed_keys:
+            self[self[key].name] = self[key]
+            del self[key]
 
 
 def parse_cue(filename, encoding=None):
@@ -384,7 +393,7 @@ def parse_cue(filename, encoding=None):
 
         if not r: return False
 
-        _track = u(_m(r, "track_num"))
+        _track = u(int(_m(r, "track_num")))
 
         _push(u"tracknumber", _track)
         return True
