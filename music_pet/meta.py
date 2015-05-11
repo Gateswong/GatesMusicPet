@@ -28,7 +28,7 @@ APPEND = 2
 u = to_unicode
 
 
-class Meta:
+class Meta(object):
 
     def __init__(self, data=None):
         if data is None:
@@ -101,10 +101,29 @@ class Track(Meta):
     @tracknumber.setter
     def tracknumber(self, value):
         self.data[u"tracknumber"] = unicode(int(value))
+        zf = 2
+        if self.totaltracks is not None:
+            zf = len(self.totaltracks)
+            if zf < 2: zf = 2
+        self.data[u"tracknumber"] = self.data[u"tracknumber"].zfill(zf)
 
     @tracknumber.deleter
     def tracknumber(self):
         del self.data[u"tracknumber"]
+
+    @property
+    def totaltracks(self):
+        if u"totaltracks" in self.data:
+            return self.data[u"totaltracks"]
+        return None
+
+    @totaltracks.setter
+    def totaltracks(self, value):
+        self.data[u"totaltracks"] = unicode(int(value))
+
+    @totaltracks.deleter
+    def totaltracks(self):
+        del self.data[u"totaltracks"]
 
     @property
     def discnumber(self):
@@ -115,6 +134,8 @@ class Track(Meta):
     @discnumber.setter
     def discnumber(self, value):
         self.data[u"discnumber"] = unicode(int(value))
+        if self.totaldiscs is not None:
+            self.data[u"discnumber"] = self.data[u"discnumber"].zfill(len(self.totaldiscs))
 
     @discnumber.deleter
     def discnumber(self):
@@ -190,6 +211,14 @@ class Track(Meta):
     def title(self):
         del self.data[u"title"]
 
+    def refresh_tracknumber(self):
+        if self.tracknumber is not None:
+            self.tracknumber = self.tracknumber
+
+    def refresh_discnumber(self):
+        if self.discnumber is not None:
+            self.discnumber = self.discnumber
+
 
 class Album(list):
 
@@ -203,12 +232,20 @@ class Album(list):
         for track in tracks:
             self.check_name(track.album)
             list.append(self, track)
-        self = sorted(self, key=lambda t: int(t.tracknumber))
+        sortedList = sorted(self, key=lambda t: int(t.tracknumber))
+        for i in xrange(len(sortedList)):
+            self[i] = sortedList[i]
+        self._fix_discnumber()
+        self._fix_tracknumber()
 
     def append(self, track):
         self.check_name(track.album)
         list.append(self, track)
-        self = sorted(self, key=lambda t: int(t.tracknumber))
+        sortedList = sorted(self, key=lambda t: int(t.tracknumber))
+        for i in xrange(len(sortedList)):
+            self[i] = sortedList[i]
+        self._fix_discnumber()
+        self._fix_tracknumber()
 
     def check_name(self, name):
         if self.name is not None:
@@ -225,7 +262,7 @@ class Album(list):
         for track in self:
             if not track.has_tag(u"tracknumber"):
                 continue
-            if track.tracknumber == u(track_num):
+            if int(track.tracknumber) == int(track_num):
                 return track
         return None
 
@@ -256,6 +293,16 @@ class Album(list):
         else:
             track.remove_tag(u"discnumber")
             track.remove_tag(u"totaldiscs")
+            track.refresh_discnumber()
+
+    def _fix_tracknumber(self):
+        max_tracknumber = 1
+        for track in self:
+            if int(track.tracknumber) > max_tracknumber:
+                max_tracknumber = int(track.tracknumber)
+        for track in self:
+            track.totaltracks = max_tracknumber
+            track.refresh_tracknumber()
 
 
 class AlbumList(dict):
