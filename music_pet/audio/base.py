@@ -15,6 +15,18 @@ class AudioFile:
         else:
             self.metadata = Track()
 
+    def has_tag(self, tag):
+        return self.metadata.has_tag(tag)
+
+    def get_tag(self, tag):
+        return self.metadata.get_tag(tag)
+
+    def set_tag(self, tag, value):
+        self.metadata.set_tag(tag, value)
+
+    def list_tag(self):
+        return self.metadata.list_tag()
+
 
 class PictureMixin:
 
