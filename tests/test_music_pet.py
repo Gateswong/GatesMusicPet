@@ -18,7 +18,7 @@ class TestOnParseCUEFile(unittest.TestCase):
         album_detail = album_list.values()[0].detail()
         album_detail_expected = [
             u"==== Album : Good Morning 精选集 ====",
-            u" == Track : 01 ==",
+            u" == Track : 1 ==",
             u"   album : Good Morning 精选集",
             u"   comment : ExactAudioCopy v1.0b2",
             u"   index_01 : 00:00:00",
@@ -27,9 +27,9 @@ class TestOnParseCUEFile(unittest.TestCase):
             u"   date : 2021",
             u"   albumartist : 愛玩魂斗羅的狂人",
             u"   genre : Soundtrack",
-            u"   tracknumber : 01",
+            u"   tracknumber : 1",
             u"   original_file : CDImage.flac",
-            u" == Track : 02 ==",
+            u" == Track : 2 ==",
             u"   album : Good Morning 精选集",
             u"   comment : ExactAudioCopy v1.0b2",
             u"   index_01 : 03:23:16",
@@ -39,9 +39,9 @@ class TestOnParseCUEFile(unittest.TestCase):
             u"   date : 2021",
             u"   albumartist : 愛玩魂斗羅的狂人",
             u"   genre : Soundtrack",
-            u"   tracknumber : 02",
+            u"   tracknumber : 2",
             u"   original_file : CDImage.flac",
-            u" == Track : 03 ==",
+            u" == Track : 3 ==",
             u"   album : Good Morning 精选集",
             u"   comment : ExactAudioCopy v1.0b2",
             u"   index_01 : 06:17:31",
@@ -51,9 +51,9 @@ class TestOnParseCUEFile(unittest.TestCase):
             u"   date : 2021",
             u"   albumartist : 愛玩魂斗羅的狂人",
             u"   genre : Soundtrack",
-            u"   tracknumber : 03",
+            u"   tracknumber : 3",
             u"   original_file : CDImage.flac",
-            u" == Track : 04 ==",
+            u" == Track : 4 ==",
             u"   album : Good Morning 精选集",
             u"   comment : ExactAudioCopy v1.0b2",
             u"   index_01 : 12:42:24",
@@ -63,7 +63,7 @@ class TestOnParseCUEFile(unittest.TestCase):
             u"   date : 2021",
             u"   albumartist : 愛玩魂斗羅的狂人",
             u"   genre : Soundtrack",
-            u"   tracknumber : 04",
+            u"   tracknumber : 4",
             u"   original_file : CDImage.flac",
         ]
         self.assertEqual(album_detail_expected, album_detail)
@@ -76,7 +76,7 @@ class TestOnParseCUEFile(unittest.TestCase):
         album_detail = album_list.values()[0].detail()
         album_detail_expected = [
             u"==== Album : No zuo no die why you try. ====",
-            u" == Track : 01 ==",
+            u" == Track : 1 ==",
             u"   comment : ExactAudioCopy v1.0b3",
             u"   album : No zuo no die why you try.",
             u"   index_01 : 00:00:00",
@@ -86,9 +86,9 @@ class TestOnParseCUEFile(unittest.TestCase):
             u"   artist : LOL",
             u"   albumartist : 大萌神赛高233",
             u"   date : 2011",
-            u"   tracknumber : 01",
+            u"   tracknumber : 1",
             u"   original_file : TRACK01.wav",
-            u" == Track : 02 ==",
+            u" == Track : 2 ==",
             u"   comment : ExactAudioCopy v1.0b3",
             u"   album : No zuo no die why you try.",
             u"   index_01 : 00:00:00",
@@ -97,9 +97,9 @@ class TestOnParseCUEFile(unittest.TestCase):
             u"   index_02 : 04:57:68",
             u"   albumartist : 大萌神赛高233",
             u"   date : 2011",
-            u"   tracknumber : 02",
+            u"   tracknumber : 2",
             u"   original_file : TRACK02.wav",
-            u" == Track : 03 ==",
+            u" == Track : 3 ==",
             u"   comment : ExactAudioCopy v1.0b3",
             u"   album : No zuo no die why you try.",
             u"   index_01 : 00:00:00",
@@ -109,9 +109,9 @@ class TestOnParseCUEFile(unittest.TestCase):
             u"   genre : Pop",
             u"   albumartist : 大萌神赛高233",
             u"   date : 2011",
-            u"   tracknumber : 03",
+            u"   tracknumber : 3",
             u"   original_file : TRACK03.wav",
-            u" == Track : 04 ==",
+            u" == Track : 4 ==",
             u"   comment : ExactAudioCopy v1.0b3",
             u"   album : No zuo no die why you try.",
             u"   index_01 : 00:00:00",
@@ -120,9 +120,9 @@ class TestOnParseCUEFile(unittest.TestCase):
             u"   index_02 : 03:38:54",
             u"   albumartist : 大萌神赛高233",
             u"   date : 2011",
-            u"   tracknumber : 04",
+            u"   tracknumber : 4",
             u"   original_file : TRACK04.wav",
-            u" == Track : 05 ==",
+            u" == Track : 5 ==",
             u"   comment : ExactAudioCopy v1.0b3",
             u"   album : No zuo no die why you try.",
             u"   index_01 : 00:00:00",
@@ -131,7 +131,7 @@ class TestOnParseCUEFile(unittest.TestCase):
             u"   index_02 : 05:00:01",
             u"   albumartist : 大萌神赛高233",
             u"   date : 2011",
-            u"   tracknumber : 05",
+            u"   tracknumber : 5",
             u"   original_file : TRACK05.wav",
         ]
 
@@ -150,8 +150,8 @@ class TestOnParseCUEFile(unittest.TestCase):
 
         album_detail = album_list.values()[0].detail()
         album_detail_expected = [
-            u"==== Album : No zuo no die why you try. ====",
-            u" == Track : 01 ==",
+            u"==== Album : 覆盖起来 ====",
+            u" == Track : 1 ==",
             u"   comment : ExactAudioCopy v1.0b3, extra comments ~~~",
             u"   album : No zuo no die why you try.",
             u"   index_01 : 00:00:00",
@@ -162,9 +162,9 @@ class TestOnParseCUEFile(unittest.TestCase):
             u"   genre : Soundtrack",
             u"   albumartist : 押す！",
             u"   date : 2011",
-            u"   tracknumber : 01",
+            u"   tracknumber : 1",
             u"   original_file : TRACK01.wav",
-            u" == Track : 02 ==",
+            u" == Track : 2 ==",
             u"   comment : ExactAudioCopy v1.0b3, extra comments ~~~",
             u"   album : No zuo no die why you try.",
             u"   index_01 : 00:00:00",
@@ -175,9 +175,9 @@ class TestOnParseCUEFile(unittest.TestCase):
             u"   genre : Soundtrack",
             u"   albumartist : 押す！",
             u"   date : 2011",
-            u"   tracknumber : 02",
+            u"   tracknumber : 2",
             u"   original_file : TRACK02.wav",
-            u" == Track : 03 ==",
+            u" == Track : 3 ==",
             u"   comment : ExactAudioCopy v1.0b3, extra comments ~~~",
             u"   album : No zuo no die why you try.",
             u"   index_01 : 00:00:00",
@@ -188,9 +188,9 @@ class TestOnParseCUEFile(unittest.TestCase):
             u"   genre : Pop, Soundtrack",
             u"   albumartist : 押す！",
             u"   date : 2011",
-            u"   tracknumber : 03",
+            u"   tracknumber : 3",
             u"   original_file : TRACK03.wav",
-            u" == Track : 04 ==",
+            u" == Track : 4 ==",
             u"   comment : ExactAudioCopy v1.0b3, extra comments ~~~",
             u"   album : No zuo no die why you try.",
             u"   index_01 : 00:00:00",
@@ -201,9 +201,9 @@ class TestOnParseCUEFile(unittest.TestCase):
             u"   genre : Soundtrack",
             u"   albumartist : 押す！",
             u"   date : 2011",
-            u"   tracknumber : 04",
+            u"   tracknumber : 4",
             u"   original_file : TRACK04.wav",
-            u" == Track : 05 ==",
+            u" == Track : 5 ==",
             u"   comment : ExactAudioCopy v1.0b3, extra comments ~~~",
             u"   album : No zuo no die why you try.",
             u"   index_01 : 00:00:00",
@@ -214,11 +214,19 @@ class TestOnParseCUEFile(unittest.TestCase):
             u"   genre : Soundtrack",
             u"   albumartist : 押す！",
             u"   date : 2011",
-            u"   tracknumber : 05",
+            u"   tracknumber : 5",
             u"   original_file : TRACK05.wav",            
         ]
 
         self.assertEqual(album_detail_expected, album_detail)
 
+    def test_AAA(self):
+        from music_pet import utils
+        from music_pet import meta
+        
+        cue = u"/Users/Gates_ice/Public/vmware-share/BaiduDownloader/[www.PT80.com]Gregorian/Japan/2001 - Masters Of Chant Chapter II (NXCB-00030)/00. Gregorian - Masters Of Chant Chapter II.cue"
+        
+        albumList = meta.parse_cue(cue)
+        pass
 
 

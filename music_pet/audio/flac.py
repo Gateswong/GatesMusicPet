@@ -2,15 +2,23 @@
 
 __all__ = [
     "FLAC",
+    "init_flacs",
 ]
 
 import re
+from uuid import uuid4
 
 from .base import AudioFile, PictureMixin
 
+from ..meta import (
+    Album,
+)
 from ..utils import (
     to_unicode as u,
     cli_escape,
+    filename_safe,
+    ensure_parent_folder,
+    path_from_pattern,
 )
 
 
@@ -19,6 +27,7 @@ class FLAC(AudioFile, PictureMixin):
     def __init__(self, trackmeta=None):
         AudioFile.__init__(self, trackmeta)
         self.commandline = u"flac"
+        self.commandline_decoder = u"ffmpeg"
 
     def command(self):
         arguments = [self.commandline]
@@ -31,6 +40,9 @@ class FLAC(AudioFile, PictureMixin):
         if self.metadata.has_tag(u"@time_from"):
             arguments.append(u'''--skip=%s''' %
                              cue_index_to_flac_time(self.metadata.get_tag(u"@time_from")))
+        elif self.metadata.has_tag(u"index_00"):
+            arguments.append(u'''--skip=%s''' %
+                             cue_index_to_flac_time(self.metadata.get_tag(u"index_00")))
 
         # End Time
         if self.metadata.has_tag(u"@time_to"):
@@ -60,10 +72,74 @@ class FLAC(AudioFile, PictureMixin):
         arguments.append(u'''-V''')
 
         # Input File
-        arguments.append(u'''%s''' % self.metadata.get_tag(u"@input_fullpath"))
+        arguments.append(u'''"%s"''' % self.metadata.get_tag(u"@input_fullpath"))
 
         # Convert command
         return u" ".join(arguments)
+
+    def command_build_tempwav(self):
+        arguments = [self.commandline_decoder]
+
+        # Input file
+        if self.has_tag(u"@input_fullpath_original"):
+            arguments.append(u'''-i "%s"''' % self.get_tag(u"@input_fullpath_original"))
+        else:
+            self.set_tag(u"@input_fullpath_original", self.get_tag(u"@input_fullpath"))
+            arguments.append(u'''-i "%s"''' %
+                             self.get_tag(u"@input_fullpath"))
+
+        # Output file
+        ofile = u'''"__tmp_%s.wav"''' % (uuid4())
+        arguments.append(ofile)
+        self.set_tag(u"@input_fullpath", ofile)
+
+        return u" ".join(arguments)
+
+    def command_clear_tempwav(self, base_command=u"rm"):
+        arguments = [base_command]
+
+        if self.has_tag(u"@input_fullpath_original"):
+            arguments.append(self.get_tag(u"@input_fullpath"))
+
+            return " ".join(arguments)
+        return "pwd"
+
+    def set_input_file(self, wavfile):
+        if not wavfile.endswith(u".wav"):
+            raise ValueError("Only accepts wav file as input files")
+
+        self.set_tag(u"@input_fullpath_original", self.get_tag(u"@input_fullpath"))
+        self.set_tag(u"@input_fullpath", wavfile)
+
+    def set_next_start_time_from_album(self, album):
+        if self.metadata.tracknumber is None:
+            return None
+
+        if type(album) != Album:
+            raise ValueError("not an instance of Album")
+
+        nexttrack = album.get_track(int(self.metadata.tracknumber) + 1)
+        if nexttrack is None:
+            return None
+
+        if nexttrack.has_tag(u"index_00"):
+            self.set_tag(u"@time_to", nexttrack.get_tag(u"index_00"))
+        elif nexttrack.has_tag(u"index_01"):
+            self.set_tag(u"@time_to", nexttrack.get_tag(u"index_01"))
+
+    def set_next_start_time(self, tstr):
+        self.set_tag(u"@time_to", cue_index_to_flac_time(tstr))
+
+    def set_output_file(self, pattern):
+        self.set_tag(u"@output_fullpath",
+                     filename_safe(path_from_pattern(pattern, self.metadata.data)))
+
+    def set_input_file(self, filename):
+        self.set_tag(u"@input_fullpath",
+                     filename_safe(filename))
+
+    def create_target_dir(self):
+        ensure_parent_folder(self.get_tag(u"@output_fullpath"))
 
 
 def cue_index_to_flac_time(timestr):
@@ -82,4 +158,19 @@ def cue_index_to_flac_time(timestr):
     return u'''%s.%s''' % (g[0], g[1])
 
 
+def init_flacs(album, output_pattern):
+    if not album:
+        return []
+
+    flacs = []
+
+    for track in album:
+        flac = FLAC(track.data)
+        if not flac.has_tag(u"index_00") and flac.has_tag(u"index_01"):
+            flac.set_tag(u"index_00", flac.get_tag(u"index_01"))
+        flac.set_next_start_time_from_album(album)
+        flac.set_output_file(output_pattern)
+        flacs.append(flac)
+
+    return flacs
 
