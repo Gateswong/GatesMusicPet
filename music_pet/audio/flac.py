@@ -58,11 +58,11 @@ class FLAC(AudioFile, PictureMixin):
 
         # Attach pictures
         if self.cover_picture is not None:
-            arguments.append(u'''--picture=3||||"%s"''' %
+            arguments.append(u'''--picture="3||||%s"''' %
                              self.cover_picture)
 
         if self.back_picture is not None:
-            arguments.append(u'''--picture=4||||"%s"''' %
+            arguments.append(u'''--picture="4||||%s"''' %
                              self.back_picture)
 
         # Set Quality
@@ -75,10 +75,15 @@ class FLAC(AudioFile, PictureMixin):
         arguments.append(u'''"%s"''' % self.metadata.get_tag(u"@input_fullpath"))
 
         # Convert command
-        return u" ".join(arguments)
+        return u" ".join(arguments).replace(u"`", u"\\`")
 
-    def command_build_tempwav(self):
+    def command_build_tempwav(self, memoize={}):
         arguments = [self.commandline_decoder]
+
+        if self.get_tag(u"@input_fullpath") in memoize:
+            self.set_tag(u"@input_fullpath_original", self.get_tag(u"@input_fullpath"))
+            self.set_tag(u"@input_fullpath", memoize[self.get_tag(u"@input_fullpath")])
+            return u"pwd"
 
         # Input file
         if self.has_tag(u"@input_fullpath_original"):
@@ -89,11 +94,12 @@ class FLAC(AudioFile, PictureMixin):
                              self.get_tag(u"@input_fullpath"))
 
         # Output file
-        ofile = u'''"__tmp_%s.wav"''' % (uuid4())
-        arguments.append(ofile)
+        ofile = u'''__tmp_%s.wav''' % (uuid4())
+        arguments.append(u'''"%s"''' % ofile)
         self.set_tag(u"@input_fullpath", ofile)
+        memoize[self.get_tag(u"@input_fullpath_original")] = ofile
 
-        return u" ".join(arguments)
+        return u" ".join(arguments).replace(u"`", u"\\`")
 
     def command_clear_tempwav(self, base_command=u"rm"):
         arguments = [base_command]
@@ -101,7 +107,7 @@ class FLAC(AudioFile, PictureMixin):
         if self.has_tag(u"@input_fullpath_original"):
             arguments.append(self.get_tag(u"@input_fullpath"))
 
-            return " ".join(arguments)
+            return " ".join(arguments).replace(u"`", u"\\`")
         return "pwd"
 
     def set_input_file(self, wavfile):
@@ -121,6 +127,16 @@ class FLAC(AudioFile, PictureMixin):
         nexttrack = album.get_track(int(self.metadata.tracknumber) + 1)
         if nexttrack is None:
             return None
+
+        if nexttrack.has_tag(u"@input_fullpath") and self.has_tag(u"@input_fullpath"):
+            if nexttrack.get_tag(u"@input_fullpath") != self.get_tag(u"@input_fullpath"):
+                return
+
+        if nexttrack.has_tag(u"original_file") and self.has_tag(u"original_file"):
+            if nexttrack.get_tag(u"original_file") != self.get_tag(u"original_file"):
+                return
+        else:
+            return
 
         if nexttrack.has_tag(u"index_00"):
             self.set_tag(u"@time_to", nexttrack.get_tag(u"index_00"))

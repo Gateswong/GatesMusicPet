@@ -7,7 +7,7 @@ __all__ = [
 ]
 
 
-class AudioFile:
+class AudioFile(object):
 
     def __init__(self, trackmeta=None):
         if trackmeta is not None:
@@ -28,7 +28,7 @@ class AudioFile:
         return self.metadata.list_tag()
 
 
-class PictureMixin:
+class PictureMixin(object):
 
     def set_picture(self, pic_index, pic_file):
         self.metadata.set_tag(u"@picture_%s" % pic_index, pic_file)
