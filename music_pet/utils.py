@@ -50,9 +50,9 @@ def iconv_file(input_filename, output_filename, encoding, overwrite=False):
 
 def filename_safe(filename):
     parts = filename.split(u"/")
-    for i, part in enumerate(parts):
+    for i in xrange(len(parts)):
         for ch in u'''<>'"?*\\/:''':
-            parts[i] = part.replace(ch, u"_").strip()
+            parts[i] = parts[i].replace(ch, u"_").strip()
     return u"/".join(parts).strip()
 
 
@@ -124,7 +124,7 @@ def path_from_pattern(pattern, d):
 
 def cli_escape(text):
     for ch in u'''"''':
-        text.replace(ch, u'''\\%s''' % ch)
+        text = text.replace(ch, u'''\\%s''' % ch)
     return text
 
 
