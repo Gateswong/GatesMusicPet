@@ -157,7 +157,6 @@ class TestOnParseCUEFile(unittest.TestCase):
         self.assertEqual(album_list.keys(), albums_names_expected)
         self.assertEqual(albums, albums_expected)
 
-
     def test_INI_utf8(self):
         from music_pet import meta
 
@@ -545,6 +544,30 @@ class UnitTest_music_pet__utils__filename_safe(unittest.TestCase):
 
     def tearDown(self):
         return
+
+    def test_1(self):
+        from music_pet.utils import filename_safe
+
+        IN = u"CDImage.flac"
+        OUT_EXPECTED = u"CDImage.flac"
+
+        self.assertEqual(filename_safe(IN), OUT_EXPECTED)
+
+    def test_2(self):
+        from music_pet.utils import filename_safe
+
+        IN = u"music/CDImage.flac"
+        OUT_EXPECTED = u"music/CDImage.flac"
+
+        self.assertEqual(filename_safe(IN), OUT_EXPECTED)
+
+    def test_3(self):
+        from music_pet.utils import filename_safe
+
+        IN = u"music/is that good?.flac"
+        OUT_EXPECTED = u"music/is that good_.flac"
+
+        self.assertEqual(filename_safe(IN), OUT_EXPECTED)
 
 
 class UnitTest_music_pet__utils__ensure_parent_folder(unittest.TestCase):
