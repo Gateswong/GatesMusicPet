@@ -5,3 +5,4 @@
 GatesMusicPet.wpr
 GatesMusicPet.wpu
 *.pyc
+*.egg-info
