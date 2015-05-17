@@ -454,6 +454,22 @@ class UnitTest_music_pet__utils__path_from_pattern(unittest.TestCase):
         with self.assertRaises(ValueError):
             path_from_pattern(PATTERN, D)
 
+    def test_8(self):
+        from music_pet.utils import path_from_pattern
+
+        PATTERN = u"/Users/normaluser/music_output/<%(prefix)s >%(album)s< (%(suffix)s)>/<<%(discnumber)s-%(tracknumber)s >%(title)s.flac"
+        D = {
+            u"album": u"看不懂到底有什么想法",
+            u"title": u"有没有搞错",
+            u"tracknumber": u"14",
+            u"discnumber": u"3",
+            u"prefix": u"精选集",
+            u"suffix": u"限量版",
+        }
+
+        with self.assertRaises(ValueError):
+            path_from_pattern(PATTERN, D)
+
 
 class UnitTest_music_pet__utils__trim_quote(unittest.TestCase):
 
@@ -740,6 +756,14 @@ class UnitTest_music_pet__utils__parent_folder(unittest.TestCase):
         OUT_EXPECTED = u'../../'''
 
         self.assertEqual(parent_folder(IN), OUT_EXPECTED)
+
+    def test_8(self):
+        from music_pet.utils import parent_folder
+
+        IN = u'''/'''
+
+        with self.assertRaises(ValueError):
+            parent_folder(IN)
 
 
 class UnitTest_music_pet__utils__copy_to(unittest.TestCase):
