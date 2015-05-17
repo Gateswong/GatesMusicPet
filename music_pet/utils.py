@@ -4,6 +4,9 @@ from codecs import encode, decode
 import re
 
 
+LINUX_ROOT = u"/"
+
+
 def trim_quote(text):
     if len(text) > 2 and text[0] == '"' and text[-1] == '"':
         text = text[1:-1]
@@ -130,9 +133,23 @@ def cli_escape(text):
 
 def parent_folder(path):
     parts = path.split(u"/")
+
+    if path == LINUX_ROOT:
+        raise ValueError(u"Can't get parent folder from linux dir /")
+
     if parts[-1] == u"":
         del parts[-1]
-    parts[-1] = u""
+
+    if parts[-1] == u".":
+        parts[-1] = u".."
+    elif parts[-1] == u"..":
+        parts.append(u"..")
+    elif len(parts) == 1:
+        return u"./"
+    else:
+        del parts[-1]
+    parts.append(u"")
+
     return u"/".join(parts)
 
 
