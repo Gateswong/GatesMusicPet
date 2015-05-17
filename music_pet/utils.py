@@ -123,7 +123,7 @@ def path_from_pattern(pattern, d):
 
 
 def cli_escape(text):
-    for ch in u'''"''':
+    for ch in u'''`''':
         text = text.replace(ch, u'''\\%s''' % ch)
     return text
 
