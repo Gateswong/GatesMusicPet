@@ -756,7 +756,7 @@ class UnitTest_music_pet__utils__copy_to(unittest.TestCase):
         FILES = [u"1.txt", u"2.dat"]
         FOLDER = u"/a"
 
-        OUT_EXPECTED = u"cp 1.txt 2.dat /a/"
+        OUT_EXPECTED = u'''cp -n "1.txt" "2.dat" "/a/"'''
 
         self.assertEqual(command_copy_to(FILES, FOLDER), OUT_EXPECTED)
 
@@ -766,7 +766,7 @@ class UnitTest_music_pet__utils__copy_to(unittest.TestCase):
         FILES = [u"1.txt", u"2.dat"]
         FOLDER = u"/a/"
 
-        OUT_EXPECTED = u"cp 1.txt 2.dat /a/"
+        OUT_EXPECTED = u'''cp -n "1.txt" "2.dat" "/a/"'''
 
         self.assertEqual(command_copy_to(FILES, FOLDER), OUT_EXPECTED)
 
@@ -786,7 +786,18 @@ class UnitTest_music_pet__utils__copy_to(unittest.TestCase):
         FILES = [u"ABC.txt", u'''good`work`.dat''']
         FOLDER = u"/a"
 
-        OUT_EXPECTED = u'''cp ABC.txt good\\`work\\`.dat /a/'''
+        OUT_EXPECTED = u'''cp -n "ABC.txt" "good\\`work\\`.dat" "/a/"'''
 
         self.assertEqual(command_copy_to(FILES, FOLDER), OUT_EXPECTED)
+
+    def test_5(self):
+        from music_pet.utils import command_copy_to
+
+        FILES = [u"ABC.txt", u'''good`work`.dat''']
+        FOLDER = u""
+
+        OUT_EXPECTED = u'''cp -n "ABC.txt" "good\\`work\\`.dat" "./"'''
+
+        self.assertEqual(command_copy_to(FILES, FOLDER), OUT_EXPECTED)
+
 

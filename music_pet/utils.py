@@ -145,12 +145,18 @@ def ensure_parent_folder(path):
 
 
 def command_copy_to(files, folder, base_command=u"cp"):
+    if len(files) == 0:
+        return u"echo"
+
+    if not folder:
+        folder = u"."
+
     arguments = [base_command]
 
     arguments.append(u"-n")
 
     for f in files:
-        arguments.append(u'''"%s"''' % f)
+        arguments.append(u'''"%s"''' % cli_escape(f))
 
     if not folder.endswith(u"/"):
         folder += u"/"
