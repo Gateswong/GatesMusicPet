@@ -91,6 +91,11 @@ class Track(Meta):
 
     def __init__(self, data=None):
         Meta.__init__(self, data)
+        self.fix_tags()
+
+    def fix_tags(self):
+        self._fix_discnumber()
+        self._fix_albumartist()
 
     @property
     def tracknumber(self):
@@ -136,6 +141,7 @@ class Track(Meta):
         self.data[u"discnumber"] = unicode(int(value))
         if self.totaldiscs is not None:
             self.data[u"discnumber"] = self.data[u"discnumber"].zfill(len(self.totaldiscs))
+        self._fix_discnumber()
 
     @discnumber.deleter
     def discnumber(self):
@@ -218,6 +224,24 @@ class Track(Meta):
     def refresh_discnumber(self):
         if self.discnumber is not None:
             self.discnumber = self.discnumber
+
+    def _fix_discnumber(self):
+        if self.discnumber is None:
+            return
+
+        try:
+            int(self.discnumber)
+        except ValueError:
+            r = re.match(u'''(\d+)/(\d+)''', self.discnumber)
+            if r is not None:
+                gps = r.groups()
+                self.discnumber = gps[0]
+                self.totaldiscs = gps[1]
+
+    def _fix_albumartist(self):
+        if not self.has_tag(u"albumartist"):
+            if self.has_tag(u"album artist"):
+                self.set_tag(u"albumartist", self.get_tag(u"album artist"))
 
 
 class Album(list):
