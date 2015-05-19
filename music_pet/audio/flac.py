@@ -7,6 +7,7 @@ __all__ = [
 
 import re
 from uuid import uuid4
+from subprocess import check_output, CalledProcessError
 
 from .base import AudioFile, PictureMixin
 
@@ -101,13 +102,27 @@ class FLAC(AudioFile, PictureMixin):
 
         return u" ".join(arguments).replace(u"`", u"\\`")
 
+    def command_only_move(self, base_command=u"mv"):
+        arguments = [base_command]
+
+        if self.has_tag(u"@input_fullpath"):
+            arguments.append(u'''"%s"''' % self.get_tag(u"@input_fullpath"))
+        elif self.has_tag(u"original_file"):
+            arguments.append(u'''"%s"''' % self.get_tag(u"original_file"))
+        else:
+            raise ValueError("Invalid input filename or missing")
+
+        arguments.append(u'''"%s"''' % self.get_tag(u"@output_fullpath"))
+
+        return cli_escape(u" ".join(arguments))
+
     def command_clear_tempwav(self, base_command=u"rm"):
         arguments = [base_command]
 
         if self.has_tag(u"@input_fullpath_original"):
             arguments.append(self.get_tag(u"@input_fullpath"))
 
-            return " ".join(arguments).replace(u"`", u"\\`")
+            return u" ".join(arguments).replace(u"`", u"\\`")
         return "pwd"
 
     def set_input_file(self, wavfile):
@@ -156,6 +171,56 @@ class FLAC(AudioFile, PictureMixin):
 
     def create_target_dir(self):
         ensure_parent_folder(self.get_tag(u"@output_fullpath"))
+
+    @classmethod
+    def from_file(cls, filename):
+        '''
+        Create an instance of ``FLAC`` from a flac file.
+        '''
+        cmdline = u'''metaflac --no-utf8-convert --export-tags-to=- "%s"''' % cli_escape(filename)
+        try:
+            p = check_output(cmdline, shell=True)
+        except CalledProcessError as ex:
+            raise ex  # for now, let's just raise this error.
+
+        single_line = True
+        tag_buffer = u""
+        value_buffer = u""
+        flac = FLAC()
+
+        for line in u(p).split(u"\n"):
+            if single_line:
+                if line == u"":
+                    continue
+
+                r = re.match(u'''([^=]+)=(.*)''', line.strip())
+                if r is None:
+                    raise ValueError("Invalid tags info in file: %s" % filename)
+                rgroups = r.groups()
+
+                # rgroups[0] is the tag
+                # rgroups[1] is the value
+                if rgroups[1] == u"":
+                    single_line = False
+                    tag_buffer = rgroups[0].lower()
+                    value_buffer = u""
+                    continue
+
+                flac.set_tag(rgroups[0].lower(), rgroups[1])
+                continue
+
+            else:
+                if line.strip() == u"":
+                    flac.set_tag(tag_buffer, value_buffer)
+                    continue
+
+                value_buffer += line.strip() + u"\n"
+                continue
+
+        flac.set_input_file(filename)
+        flac.metadata.fix_tags()
+
+        return flac
 
 
 def cue_index_to_flac_time(timestr):

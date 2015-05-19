@@ -454,6 +454,22 @@ class UnitTest_music_pet__utils__path_from_pattern(unittest.TestCase):
         with self.assertRaises(ValueError):
             path_from_pattern(PATTERN, D)
 
+    def test_8(self):
+        from music_pet.utils import path_from_pattern
+
+        PATTERN = u"/Users/normaluser/music_output/<%(prefix)s >%(album)s< (%(suffix)s)>/<<%(discnumber)s-%(tracknumber)s >%(title)s.flac"
+        D = {
+            u"album": u"看不懂到底有什么想法",
+            u"title": u"有没有搞错",
+            u"tracknumber": u"14",
+            u"discnumber": u"3",
+            u"prefix": u"精选集",
+            u"suffix": u"限量版",
+        }
+
+        with self.assertRaises(ValueError):
+            path_from_pattern(PATTERN, D)
+
 
 class UnitTest_music_pet__utils__trim_quote(unittest.TestCase):
 
@@ -550,7 +566,41 @@ class UnitTest_music_pet__utils__iconv_file(unittest.TestCase):
         return
 
     def tearDown(self):
+        os.remove(u"tmp/outfile.txt")
         return
+
+    def test_1(self):
+        from music_pet.utils import iconv_file
+
+        iconv_file(u"testfiles/CUETestFile1.gbk.cue",
+                   u"tmp/outfile.txt",
+                   "gbk")
+
+        self.assertEquals(open(u"testfiles/CUETestFile1.utf8.cue").read(),
+                          open(u"tmp/outfile.txt").read())
+
+    def test_2(self):
+        from music_pet.utils import iconv_file
+
+        with open(u"tmp/outfile.txt", "w") as fp:
+            fp.write(u"123")
+
+        iconv_file(u"testfiles/CUETestFile1.gbk.cue",
+                   u"tmp/outfile.txt",
+                   "gbk")
+
+        self.assertEqual(open(u"tmp/outfile.txt").read(),
+                         u"123")
+
+    def test_3(self):
+        from music_pet.utils import iconv_file
+
+        iconv_file(u"testfiles/CUETestFile1.utf8.cue",
+                   u"tmp/outfile.txt",
+                   "utf8")
+
+        self.assertEqual(open(u"testfiles/CUETestFile1.utf8.cue").read(),
+                         open(u"tmp/outfile.txt").read())
 
 
 class UnitTest_music_pet__utils__filename_safe(unittest.TestCase):
@@ -589,10 +639,33 @@ class UnitTest_music_pet__utils__filename_safe(unittest.TestCase):
 class UnitTest_music_pet__utils__ensure_parent_folder(unittest.TestCase):
 
     def setUp(self):
+        self.deltmp = True
+        self.deltmp2 = True
         return
 
     def tearDown(self):
+        if self.deltmp:
+            os.rmdir(u"tmp/a/b/c")
+            os.rmdir(u"tmp/a/b")
+        if self.deltmp2:
+            os.rmdir(u"tmp/a")
         return
+
+    def test_1(self):
+        from music_pet.utils import ensure_parent_folder
+
+        ensure_parent_folder(u"tmp/a/b/c/d")
+        self.assertTrue(os.path.exists(u"tmp/a/b/c"))
+        self.assertTrue(os.path.isdir(u"tmp/a/b/c"))
+
+    def test_2(self):
+        from music_pet.utils import ensure_parent_folder
+
+        self.deltmp = False
+        os.makedirs(u"tmp/a", 0440)
+
+        with self.assertRaises(OSError):
+            ensure_parent_folder(u"tmp/a/b/c/d")
 
 
 class UnitTest_music_pet__utils__cli_escape(unittest.TestCase):
@@ -684,6 +757,14 @@ class UnitTest_music_pet__utils__parent_folder(unittest.TestCase):
 
         self.assertEqual(parent_folder(IN), OUT_EXPECTED)
 
+    def test_8(self):
+        from music_pet.utils import parent_folder
+
+        IN = u'''/'''
+
+        with self.assertRaises(ValueError):
+            parent_folder(IN)
+
 
 class UnitTest_music_pet__utils__copy_to(unittest.TestCase):
 
@@ -699,7 +780,7 @@ class UnitTest_music_pet__utils__copy_to(unittest.TestCase):
         FILES = [u"1.txt", u"2.dat"]
         FOLDER = u"/a"
 
-        OUT_EXPECTED = u"cp 1.txt 2.dat /a/"
+        OUT_EXPECTED = u'''cp -n "1.txt" "2.dat" "/a/"'''
 
         self.assertEqual(command_copy_to(FILES, FOLDER), OUT_EXPECTED)
 
@@ -709,7 +790,7 @@ class UnitTest_music_pet__utils__copy_to(unittest.TestCase):
         FILES = [u"1.txt", u"2.dat"]
         FOLDER = u"/a/"
 
-        OUT_EXPECTED = u"cp 1.txt 2.dat /a/"
+        OUT_EXPECTED = u'''cp -n "1.txt" "2.dat" "/a/"'''
 
         self.assertEqual(command_copy_to(FILES, FOLDER), OUT_EXPECTED)
 
@@ -729,7 +810,18 @@ class UnitTest_music_pet__utils__copy_to(unittest.TestCase):
         FILES = [u"ABC.txt", u'''good`work`.dat''']
         FOLDER = u"/a"
 
-        OUT_EXPECTED = u'''cp ABC.txt good\\`work\\`.dat /a/'''
+        OUT_EXPECTED = u'''cp -n "ABC.txt" "good\\`work\\`.dat" "/a/"'''
 
         self.assertEqual(command_copy_to(FILES, FOLDER), OUT_EXPECTED)
+
+    def test_5(self):
+        from music_pet.utils import command_copy_to
+
+        FILES = [u"ABC.txt", u'''good`work`.dat''']
+        FOLDER = u""
+
+        OUT_EXPECTED = u'''cp -n "ABC.txt" "good\\`work\\`.dat" "./"'''
+
+        self.assertEqual(command_copy_to(FILES, FOLDER), OUT_EXPECTED)
+
 

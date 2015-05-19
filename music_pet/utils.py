@@ -4,6 +4,9 @@ from codecs import encode, decode
 import re
 
 
+LINUX_ROOT = u"/"
+
+
 def trim_quote(text):
     if len(text) > 2 and text[0] == '"' and text[-1] == '"':
         text = text[1:-1]
@@ -123,16 +126,30 @@ def path_from_pattern(pattern, d):
 
 
 def cli_escape(text):
-    for ch in u'''"''':
+    for ch in u'''`''':
         text = text.replace(ch, u'''\\%s''' % ch)
     return text
 
 
 def parent_folder(path):
     parts = path.split(u"/")
+
+    if path == LINUX_ROOT:
+        raise ValueError(u"Can't get parent folder from linux dir /")
+
     if parts[-1] == u"":
         del parts[-1]
-    parts[-1] = u""
+
+    if parts[-1] == u".":
+        parts[-1] = u".."
+    elif parts[-1] == u"..":
+        parts.append(u"..")
+    elif len(parts) == 1:
+        return u"./"
+    else:
+        del parts[-1]
+    parts.append(u"")
+
     return u"/".join(parts)
 
 
@@ -145,12 +162,18 @@ def ensure_parent_folder(path):
 
 
 def command_copy_to(files, folder, base_command=u"cp"):
+    if len(files) == 0:
+        return u"echo"
+
+    if not folder:
+        folder = u"."
+
     arguments = [base_command]
 
     arguments.append(u"-n")
 
     for f in files:
-        arguments.append(u'''"%s"''' % f)
+        arguments.append(u'''"%s"''' % cli_escape(f))
 
     if not folder.endswith(u"/"):
         folder += u"/"
