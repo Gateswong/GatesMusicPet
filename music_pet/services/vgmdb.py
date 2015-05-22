@@ -1,4 +1,4 @@
-# -*-: coding:utf-8 -*-
+# -*-: coding: utf-8 -*-
 
 import requests
 import json
@@ -119,5 +119,32 @@ def album_tracks(album_info, lang=u"English"):
     return discs
 
 
+def album_detail(album_info, lang=u"English", lang_short=u"en"):
+    detail_string = u""
 
+    if lang_short in album_info[u"names"]:
+        detail_string += u"TITLE : %s\n" % album_info[u"names"][lang_short]
+    else:
+        detail_string += u"TITLE : %s\n" % album_info[u"name"]
+
+    detail_string += u"\nCOMPOSER :\n"
+
+    for composer in album_info[u"composers"]:
+        if lang_short in composer[u"names"]:
+            detail_string += u"%s\n" % composer[u"names"][lang_short]
+        else:
+            detail_string += u"%s\n" % composer[u"names"][u"en"]
+
+    for disc in album_info[u"discs"]:
+        detail_string += u"\nIn : %s\n" % disc[u"name"]
+        for track_id, track in enumerate(disc[u"tracks"]):
+            detail_string += u"  %s : %s\n" % (
+                str(track_id + 1).zfill(2),
+                track[u"names"][lang] if lang in track[u"names"] else track[u"names"]["English"])
+
+    return detail_string
+
+
+def print_album_detail(album_info, lang=u"English", lang_short=u"en"):
+    print(album_detail(album_info, lang, lang_short))
 
