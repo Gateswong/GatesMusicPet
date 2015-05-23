@@ -2,6 +2,9 @@
 
 import requests
 import json
+import re
+
+from ..meta import Album
 
 
 def _get_json_by_link(link):
@@ -109,12 +112,17 @@ def album_tracks(album_info, lang=u"English"):
     discs = {}
 
     for disc_dict in album_info[u"discs"]:
-        discs[disc_dict[u"name"]] = []
+        r = re.match(u'''Disc (\d+)''', disc_dict[u"name"])
+        if not r:
+            disc_num = disc_dict[u"name"]
+        else:
+            disc_num = r.groups()[0]
+        discs[disc_num] = []
 
         for track in disc_dict[u"tracks"]:
             if lang not in track[u"names"]:
                 raise ValueError("Can't find track info with language: %s" % lang)
-            discs[disc_dict[u"name"]].append(track[u"names"][lang])
+            discs[disc_num].append(track[u"names"][lang])
 
     return discs
 
@@ -145,6 +153,29 @@ def album_detail(album_info, lang=u"English", lang_short=u"en"):
     return detail_string
 
 
+# Functions that working with other modules
+def update_album(album_info, album, lang=u"English"):
+    if not isinstance(album, Album):
+        raise TypeError("update_album only accepts instance of Album")
+
+    discs = album_tracks(album_info, lang=lang)
+
+    # First pass: Assume all tracks info exists in the result from vgmdb.
+    for track in album:
+        if int(track.discnumber) not in discs:
+            raise ValueError("Can't find the track info from the result of vgmdb.")
+
+        if int(track.tracknumber) > len(discs[int(track.discnumber)]):
+            raise ValueError("Can't find the track info from the result of vgmdb.")
+
+    # Second pass: Update all tracks' info.
+    for track in album:
+        track.title = discs[int(track.discnumber)][int(track.tracknumber)-1]
+
+    return
+
+
+# Functions for details
 def print_album_detail(album_info, lang=u"English", lang_short=u"en"):
     print(album_detail(album_info, lang, lang_short))
 
