@@ -17,6 +17,7 @@ __all__ = [
     "DEFAULT",
     "OVERWRITE",
     "APPEND",
+    "TAG_UPDATE_MODE",
 ]
 
 TAG_UPDATE_MODE = u"@music_pet:update_mode"
