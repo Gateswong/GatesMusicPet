@@ -14,83 +14,100 @@ __all__ = [
     "AlbumList",
     "parse_cue",
     "parse_ini",
-    "DEFAULT",
-    "OVERWRITE",
-    "APPEND",
 ]
-
-TAG_UPDATE_MODE = u"@music_pet:update_mode"
-
-DEFAULT = 0
-OVERWRITE = 1
-APPEND = 2
 
 u = to_unicode
 
 
 class Meta(object):
+    """
+    Stores metadata.
+    """
 
-    def __init__(self, data=None):
-        if data is None:
-            self.data = {}
-        else:
-            assert type(data) == dict
-            self.data = data
+    TAG_UPDATE_MODE = u"@music_pet:update_mode"
+
+    UPDATE_DEFAULT = 0
+    UPDATE_OVERWRITE = 1
+    UPDATE_APPEND = 2
+
+    def __init__(self, **kwargs):
+        self._metadata = {}
+        for k, v in kwargs.iteritems():
+            self.set_tag(k, v)
+
+    def __contains__(self, key):
+        return self.has_tag(key)
+
+    def __getitem__(self, key):
+        return self.get_tag(key)
+
+    def __setitem__(self, key, value):
+        return self.set_tag(key, value)
+
+    def __delitem__(self, key):
+        return self.remove_tag(key)
 
     def has_tag(self, tag):
-        if tag not in self.data:
-            return False
-        if self.data[u(tag)] is None:
+        if u(tag) not in self._metadata:
             return False
         return True
 
     def get_tag(self, tag):
         if not self.has_tag(tag):
             raise InvalidTag(u"Tag '%s' doesn't exists" % tag)
-        return self.data[u(tag)]
+        return self._metadata[u(tag)]
 
     def set_tag(self, tag, value):
-        self.data[u(tag)] = u(value)
+        if not value and self.has_tag(tag):
+            self.remove_tag(tag)
+            return
+        self._metadata[u(tag)] = u(value)
 
     def remove_tag(self, tag):
         if self.has_tag(tag):
-            del self.data[tag]
+            del self._metadata[u(tag)]
 
-    def list_tag(self):
-        return filter(lambda t: self.data[u(t)] is not None, self.data.keys())
+    def list_tags(self):
+        return self._metadata.keys()
 
-    def update(self, data, mode=DEFAULT):
+    def update(self, metadata, mode=UPDATE_DEFAULT):
         """
         mode is one of DEFAULT, OVERWRITE and APPEND
         """
-        if data.has_tag(TAG_UPDATE_MODE):
-            mode = int(data.get_tag(TAG_UPDATE_MODE))
-        for tag in data.list_tag():
-            if tag == TAG_UPDATE_MODE: continue
-            if mode == DEFAULT and not self.has_tag(tag):
-                self.set_tag(tag, data.get_tag(tag))
-            elif mode == OVERWRITE:
-                self.set_tag(tag, data.get_tag(tag))
-            elif mode == APPEND and not self.has_tag(tag):
-                self.set_tag(tag, data.get_tag(tag))
-            elif mode == APPEND:
+        if not isinstance(metadata, (Meta)):
+            raise TypeError("An instance of Meta is needed for update()")
+
+        if metadata.has_tag(self.TAG_UPDATE_MODE):
+            mode = int(metadata.get_tag(self.TAG_UPDATE_MODE))
+
+        for tag in metadata.list_tags():
+            if tag == self.TAG_UPDATE_MODE: continue
+
+            elif mode in [self.UPDATE_DEFAULT, self.UPDATE_APPEND] and not self.has_tag(tag):
+                self.set_tag(tag, metadata.get_tag(tag))
+
+            elif mode == self.UPDATE_OVERWRITE:
+                self.set_tag(tag, metadata.get_tag(tag))
+
+            elif mode == self.UPDATE_APPEND:
                 self.set_tag(tag,
                              u"%s, %s" % (
                                  self.get_tag(tag),
-                                 data.get_tag(tag)
+                                 metadata.get_tag(tag)
                              ))
+        return
 
-    def detail(self):
-        lines = []
-        for tag in self.list_tag():
-            lines.append(u"%s : %s" % (tag, self.get_tag(tag)))
-        return lines
+    def to_string(self):
+        string = u""
+        for tag, value in self._metadata.items():
+            string += u"%s : %s" % (tag, value)
+        return string
 
 
 class Track(Meta):
 
-    def __init__(self, data=None):
-        Meta.__init__(self, data)
+    def __init__(self, **kwargs):
+        Meta.__init__(self, **kwargs)
         self.fix_tags()
 
     def fix_tags(self):
@@ -99,123 +116,123 @@ class Track(Meta):
 
     @property
     def tracknumber(self):
-        if u"tracknumber" in self.data:
-            return self.data[u"tracknumber"]
+        if u"tracknumber" in self._metadata:
+            return self._metadata[u"tracknumber"]
         return None
 
     @tracknumber.setter
     def tracknumber(self, value):
-        self.data[u"tracknumber"] = unicode(int(value))
+        self._metadata[u"tracknumber"] = unicode(int(value))
         zf = 2
         if self.totaltracks is not None:
             zf = len(self.totaltracks)
             if zf < 2: zf = 2
-        self.data[u"tracknumber"] = self.data[u"tracknumber"].zfill(zf)
+        self._metadata[u"tracknumber"] = self._metadata[u"tracknumber"].zfill(zf)
 
     @tracknumber.deleter
     def tracknumber(self):
-        del self.data[u"tracknumber"]
+        del self._metadata[u"tracknumber"]
 
     @property
     def totaltracks(self):
-        if u"totaltracks" in self.data:
-            return self.data[u"totaltracks"]
+        if u"totaltracks" in self._metadata:
+            return self._metadata[u"totaltracks"]
         return None
 
     @totaltracks.setter
     def totaltracks(self, value):
-        self.data[u"totaltracks"] = unicode(int(value))
+        self._metadata[u"totaltracks"] = unicode(int(value))
 
     @totaltracks.deleter
     def totaltracks(self):
-        del self.data[u"totaltracks"]
+        del self._metadata[u"totaltracks"]
 
     @property
     def discnumber(self):
-        if u"discnumber" in self.data:
-            return self.data[u"discnumber"]
+        if u"discnumber" in self._metadata:
+            return self._metadata[u"discnumber"]
         return None
 
     @discnumber.setter
     def discnumber(self, value):
-        self.data[u"discnumber"] = unicode(int(value))
+        self._metadata[u"discnumber"] = unicode(int(value))
         if self.totaldiscs is not None:
-            self.data[u"discnumber"] = self.data[u"discnumber"].zfill(len(self.totaldiscs))
+            self._metadata[u"discnumber"] = self._metadata[u"discnumber"].zfill(len(self.totaldiscs))
         self._fix_discnumber()
 
     @discnumber.deleter
     def discnumber(self):
-        del self.data[u"discnumber"]
+        del self._metadata[u"discnumber"]
 
     @property
     def totaldiscs(self):
-        if u"totaldiscs" in self.data:
-            return self.data[u"totaldiscs"]
+        if u"totaldiscs" in self._metadata:
+            return self._metadata[u"totaldiscs"]
         return None
 
     @totaldiscs.setter
     def totaldiscs(self, value):
-        self.data[u"totaldiscs"] = unicode(int(value))
+        self._metadata[u"totaldiscs"] = unicode(int(value))
 
     @totaldiscs.deleter
     def totaldiscs(self):
-        del self.data[u"totaldiscs"]
+        del self._metadata[u"totaldiscs"]
 
     @property
     def album(self):
-        if u"album" in self.data:
-            return self.data[u"album"]
+        if u"album" in self._metadata:
+            return self._metadata[u"album"]
         return None
 
     @album.setter
     def album(self, value):
-        self.data[u"album"] = unicode(value)
+        self._metadata[u"album"] = unicode(value)
 
     @album.deleter
     def album(self):
-        del self.data[u"album"]
+        del self._metadata[u"album"]
 
     @property
     def albumartist(self):
-        if u"albumartist" in self.data:
-            return self.data[u"albumartist"]
+        if u"albumartist" in self._metadata:
+            return self._metadata[u"albumartist"]
         return None
 
     @albumartist.setter
     def albumartist(self, value):
-        self.data[u"albumartist"] = unicode(value)
+        self._metadata[u"albumartist"] = unicode(value)
 
     @albumartist.deleter
     def albumartist(self):
-        del self.data[u"albumartist"]
+        del self._metadata[u"albumartist"]
 
     @property
     def artist(self):
-        if u"artist" in self.data:
-            return self.data[u"artist"]
+        if u"artist" in self._metadata:
+            return self._metadata[u"artist"]
         return None
 
     @artist.setter
     def artist(self, value):
-        self.data[u"artist"] = unicode(value)
+        self._metadata[u"artist"] = unicode(value)
 
     @artist.deleter
     def artist(self):
-        del self.data[u"artist"]
+        del self._metadata[u"artist"]
 
     @property
     def title(self):
-        if u"title" in self.data:
-            return self.data[u"title"]
+        if u"title" in self._metadata:
+            return self._metadata[u"title"]
         return None
 
     @title.setter
     def title(self, value):
-        self.data[u"title"] = unicode(value)
+        self._metadata[u"title"] = unicode(value)
 
     @title.deleter
     def title(self):
-        del self.data[u"title"]
+        del self._metadata[u"title"]
 
     def refresh_tracknumber(self):
         if self.tracknumber is not None:
