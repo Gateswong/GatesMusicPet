@@ -9,153 +9,148 @@ class TestOnParseCUEFile(unittest.TestCase):
         return
 
     def test_single_flac_CUE_utf8(self):
-        from music_pet import meta
+        from music_pet.playlist import cue
 
         INPUT_FILE = u"testfiles/CUETestFile1.utf8.cue"
 
-        album_list = meta.parse_cue(INPUT_FILE)
+        metas = cue.parse_cue(INPUT_FILE)
 
-        albums = [[x.data for x in y] for y in album_list.values()]
-        albums_expected = [
-            [
-                {
-                    u'album': u'Good Morning 精选集',
-                    u'comment': u'ExactAudioCopy v1.0b2',
-                    u'index_01': u'00:00:00',
-                    u'totaltracks': u'4',
-                    u'discid': u'2011FICDKE',
-                    u'title': u'さよなら',
-                    u'date': u'2021',
-                    u'albumartist': u'愛玩魂斗羅的狂人',
-                    u'genre': u'Soundtrack',
-                    u'tracknumber': u'01',
-                    u'original_file': u'CDImage.flac'
-                }, {
-                    u'album': u'Good Morning 精选集',
-                    u'comment': u'ExactAudioCopy v1.0b2',
-                    u'index_01': u'03:23:16',
-                    u'index_00': u'03:20:54',
-                    u'discid': u'2011FICDKE',
-                    u'title': u'歌',
-                    u'totaltracks': u'4',
-                    u'date': u'2021',
-                    u'albumartist': u'愛玩魂斗羅的狂人',
-                    u'genre': u'Soundtrack',
-                    u'tracknumber': u'02',
-                    u'original_file': u'CDImage.flac'
-                }, {
-                    u'album': u'Good Morning 精选集',
-                    u'comment': u'ExactAudioCopy v1.0b2',
-                    u'index_01': u'06:17:31',
-                    u'index_00': u'06:16:15',
-                    u'discid': u'2011FICDKE',
-                    u'title': u'丧心病狂',
-                    u'totaltracks': u'4',
-                    u'date': u'2021',
-                    u'albumartist': u'愛玩魂斗羅的狂人',
-                    u'genre': u'Soundtrack',
-                    u'tracknumber': u'03',
-                    u'original_file': u'CDImage.flac'
-                }, {
-                    u'album': u'Good Morning 精选集',
-                    u'comment': u'ExactAudioCopy v1.0b2',
-                    u'index_01': u'12:42:24',
-                    u'index_00': u'12:38:49',
-                    u'discid': u'2011FICDKE',
-                    u'title': u'～看不到看不到看不到！',
-                    u'totaltracks': u'4',
-                    u'date': u'2021',
-                    u'albumartist': u'愛玩魂斗羅的狂人',
-                    u'genre': u'Soundtrack',
-                    u'tracknumber': u'04',
-                    u'original_file': u'CDImage.flac'
-                }
-            ]
+        from music_pet import meta
+        meta.print_metas(metas)
+
+        expected_metas = [
+            {
+                u'ALBUM': u'Good Morning \u7cbe\u9009\u96c6',
+                u'ALBUMARTIST': u'\u611b\u73a9\u9b42\u6597\u7f85\u7684\u72c2\u4eba',
+                u'COMMENT': u'ExactAudioCopy v1.0b2',
+                u'DATE': u'2021',
+                u'DISCID': u'2011FICDKE',
+                u'GENRE': u'Soundtrack',
+                u'INDEX 01': u'00:00:00',
+                u'TITLE': u'\u3055\u3088\u306a\u3089',
+                u'TRACKNUMBER': u'1',
+                u'_file': u'CDImage.flac',
+                u'_source': u'CUE'
+            }, {
+                u'ALBUM': u'Good Morning \u7cbe\u9009\u96c6',
+                u'ALBUMARTIST': u'\u611b\u73a9\u9b42\u6597\u7f85\u7684\u72c2\u4eba',
+                u'COMMENT': u'ExactAudioCopy v1.0b2',
+                u'DATE': u'2021',
+                u'DISCID': u'2011FICDKE',
+                u'GENRE': u'Soundtrack',
+                u'INDEX 00': u'03:20:54',
+                u'INDEX 01': u'03:23:16',
+                u'TITLE': u'\u6b4c',
+                u'TRACKNUMBER': u'2',
+                u'_file': u'CDImage.flac',
+                u'_source': u'CUE'
+            }, {
+                u'ALBUM': u'Good Morning \u7cbe\u9009\u96c6',
+                u'ALBUMARTIST': u'\u611b\u73a9\u9b42\u6597\u7f85\u7684\u72c2\u4eba',
+                u'COMMENT': u'ExactAudioCopy v1.0b2',
+                u'DATE': u'2021',
+                u'DISCID': u'2011FICDKE',
+                u'GENRE': u'Soundtrack',
+                u'INDEX 00': u'06:16:15',
+                u'INDEX 01': u'06:17:31',
+                u'TITLE': u'\u4e27\u5fc3\u75c5\u72c2',
+                u'TRACKNUMBER': u'3',
+                u'_file': u'CDImage.flac',
+                u'_source': u'CUE'
+            }, {
+                u'ALBUM': u'Good Morning \u7cbe\u9009\u96c6',
+                u'ALBUMARTIST': u'\u611b\u73a9\u9b42\u6597\u7f85\u7684\u72c2\u4eba',
+                u'COMMENT': u'ExactAudioCopy v1.0b2',
+                u'DATE': u'2021',
+                u'DISCID': u'2011FICDKE',
+                u'GENRE': u'Soundtrack',
+                u'INDEX 00': u'12:38:49',
+                u'INDEX 01': u'12:42:24',
+                u'TITLE': u'\uff5e\u770b\u4e0d\u5230\u770b\u4e0d\u5230\u770b\u4e0d\u5230\uff01',
+                u'TRACKNUMBER': u'4',
+                u'_file': u'CDImage.flac',
+                u'_source': u'CUE'
+            }
         ]
 
-        self.assertEqual(album_list.keys(), [u'Good Morning 精选集'])
-        self.assertEqual(albums, albums_expected)
+        for i in xrange(len(metas)):
+            self.assertEqual(metas[i]._metadata, expected_metas[i])
 
     def test_multitrack_flac_CUE_utf8(self):
-        from music_pet import meta
+        from music_pet.playlist import cue
 
         INPUT_FILE = u"testfiles/CUETestFile2.utf8.cue"
 
-        album_list = meta.parse_cue(INPUT_FILE)
+        metas = cue.parse_cue(INPUT_FILE)
 
-        albums = [[x.data for x in y] for y in album_list.values()]
-
-        albums_names_expected = [u'No zuo no die why you try.']
-        albums_expected = [
-            [
-                {
-                    u'comment': u'ExactAudioCopy v1.0b3',
-                    u'album': u'No zuo no die why you try.',
-                    u'index_01': u'00:00:00',
-                    u'discid': u'FF30FB07',
-                    u'title': u'Peace War Found',
-                    u'index_02': u'03:56:24',
-                    u'artist': u'LOL',
-                    u'totaltracks': u'5',
-                    u'albumartist': u'大萌神赛高233',
-                    u'date': u'2011',
-                    u'tracknumber': u'01',
-                    u'original_file': u'TRACK01.wav'
-                }, {
-                    u'comment': u'ExactAudioCopy v1.0b3',
-                    u'album': u'No zuo no die why you try.',
-                    u'index_01': u'00:00:00',
-                    u'discid': u'FF30FB07',
-                    u'title': u'GOGOGOGO',
-                    u'index_02': u'04:57:68',
-                    u'totaltracks': u'5',
-                    u'albumartist': u'大萌神赛高233',
-                    u'date': u'2011',
-                    u'tracknumber': u'02',
-                    u'original_file': u'TRACK02.wav'
-                }, {
-                    u'comment': u'ExactAudioCopy v1.0b3',
-                    u'album': u'No zuo no die why you try.',
-                    u'index_01': u'00:00:00',
-                    u'totaltracks': u'5',
-                    u'discid': u'FF30FB07',
-                    u'title': u'麻麻请再打我一次',
-                    u'index_02': u'04:38:13',
-                    u'genre': u'Pop',
-                    u'albumartist': u'大萌神赛高233',
-                    u'date': u'2011',
-                    u'tracknumber': u'03',
-                    u'original_file': u'TRACK03.wav'
-                }, {
-                    u'comment': u'ExactAudioCopy v1.0b3',
-                    u'album': u'No zuo no die why you try.',
-                    u'index_01': u'00:00:00',
-                    u'discid': u'FF30FB07',
-                    u'title': u'duang~',
-                    u'index_02': u'03:38:54',
-                    u'totaltracks': u'5',
-                    u'albumartist': u'大萌神赛高233',
-                    u'date': u'2011',
-                    u'tracknumber': u'04',
-                    u'original_file': u'TRACK04.wav'
-                }, {
-                    u'comment': u'ExactAudioCopy v1.0b3',
-                    u'album': u'No zuo no die why you try.',
-                    u'index_01': u'00:00:00',
-                    u'discid': u'FF30FB07',
-                    u'title': u'Hmmmm...',
-                    u'index_02': u'05:00:01',
-                    u'totaltracks': u'5',
-                    u'albumartist': u'大萌神赛高233',
-                    u'date': u'2011',
-                    u'tracknumber': u'05',
-                    u'original_file': u'TRACK05.wav'
-                }
-            ]
+        expected_metas = [
+            {
+                u'COMMENT': u'ExactAudioCopy v1.0b3',
+                u'ALBUM': u'No zuo no die why you try.',
+                u'INDEX 01': u'00:00:00',
+                u'DISCID': u'FF30FB07',
+                u'TITLE': u'Peace War Found',
+                u'INDEX 02': u'03:56:24',
+                u'ARTIST': u'LOL',
+                u'ALBUMARTIST': u'大萌神赛高233',
+                u'DATE': u'2011',
+                u'TRACKNUMBER': u'1',
+                u'_file': u'TRACK01.wav',
+                u'_source': u'CUE'
+            }, {
+                u'COMMENT': u'ExactAudioCopy v1.0b3',
+                u'ALBUM': u'No zuo no die why you try.',
+                u'INDEX 01': u'00:00:00',
+                u'DISCID': u'FF30FB07',
+                u'TITLE': u'GOGOGOGO',
+                u'INDEX 02': u'04:57:68',
+                u'ALBUMARTIST': u'大萌神赛高233',
+                u'DATE': u'2011',
+                u'TRACKNUMBER': u'2',
+                u'_file': u'TRACK02.wav',
+                u'_source': u'CUE'
+            }, {
+                u'COMMENT': u'ExactAudioCopy v1.0b3',
+                u'ALBUM': u'No zuo no die why you try.',
+                u'INDEX 01': u'00:00:00',
+                u'DISCID': u'FF30FB07',
+                u'TITLE': u'麻麻请再打我一次',
+                u'INDEX 02': u'04:38:13',
+                u'GENRE': u'Pop',
+                u'ALBUMARTIST': u'大萌神赛高233',
+                u'DATE': u'2011',
+                u'TRACKNUMBER': u'3',
+                u'_file': u'TRACK03.wav',
+                u'_source': u'CUE'
+            }, {
+                u'COMMENT': u'ExactAudioCopy v1.0b3',
+                u'ALBUM': u'No zuo no die why you try.',
+                u'INDEX 01': u'00:00:00',
+                u'DISCID': u'FF30FB07',
+                u'TITLE': u'duang~',
+                u'INDEX 02': u'03:38:54',
+                u'ALBUMARTIST': u'大萌神赛高233',
+                u'DATE': u'2011',
+                u'TRACKNUMBER': u'4',
+                u'_file': u'TRACK04.wav',
+                u'_source': u'CUE'
+            }, {
+                u'COMMENT': u'ExactAudioCopy v1.0b3',
+                u'ALBUM': u'No zuo no die why you try.',
+                u'INDEX 01': u'00:00:00',
+                u'DISCID': u'FF30FB07',
+                u'TITLE': u'Hmmmm...',
+                u'INDEX 02': u'05:00:01',
+                u'ALBUMARTIST': u'大萌神赛高233',
+                u'DATE': u'2011',
+                u'TRACKNUMBER': u'5',
+                u'_file': u'TRACK05.wav',
+                u'_source': u'CUE'
+            }
         ]
 
-        self.assertEqual(album_list.keys(), albums_names_expected)
-        self.assertEqual(albums, albums_expected)
+        for i in xrange(len(metas)):
+            self.assertEqual(metas[i]._metadata, expected_metas[i])
 
     def test_INI_utf8(self):
         from music_pet import meta

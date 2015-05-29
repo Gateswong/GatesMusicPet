@@ -51,6 +51,16 @@ def iconv_file(input_filename, output_filename, encoding, overwrite=False):
                 "utf8"))
 
 
+def read_file(filename, encoding="utf_8"):
+    '''
+    Load the content of a CUE file.
+    '''
+    file_content_string = open(filename, "rb").read()
+    if file_content_string[:3] == b"\xef\xbb\xbf":
+        file_content_string = file_content_string[3:]
+    return decode(file_content_string, encoding)
+
+
 def filename_safe(filename):
     parts = filename.split(u"/")
     for i in xrange(len(parts)):

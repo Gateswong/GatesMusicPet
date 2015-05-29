@@ -10,10 +10,6 @@ from .exc import InvalidTag
 __all__ = [
     "Meta",
     "Track",
-    "Album",
-    "AlbumList",
-    "parse_cue",
-    "parse_ini",
 ]
 
 u = to_unicode
@@ -24,7 +20,7 @@ class Meta(object):
     Stores metadata.
     """
 
-    TAG_UPDATE_MODE = u"@music_pet:update_mode"
+    TAG_UPDATE_MODE = u"_update_mode"
 
     UPDATE_DEFAULT = 0
     UPDATE_OVERWRITE = 1
@@ -100,7 +96,7 @@ class Meta(object):
     def to_string(self):
         string = u""
         for tag, value in self._metadata.items():
-            string += u"%s : %s" % (tag, value)
+            string += u"%s : %s\n" % (tag, value)
         return string
 
 
@@ -108,30 +104,28 @@ class Track(Meta):
 
     def __init__(self, **kwargs):
         Meta.__init__(self, **kwargs)
-        self.fix_tags()
-
-    def fix_tags(self):
-        self._fix_discnumber()
-        self._fix_albumartist()
 
     @property
     def tracknumber(self):
-        if u"tracknumber" in self._metadata:
-            return self._metadata[u"tracknumber"]
+        if u"TRACKNUMBER" in self:
+            return self[u"TRACKNUMBER"]
+        elif u"TRACK NUMBER" in self:
+            return self[u"TRACK NUMBER"]
         return None
 
     @tracknumber.setter
     def tracknumber(self, value):
-        self._metadata[u"tracknumber"] = unicode(int(value))
-        zf = 2
-        if self.totaltracks is not None:
-            zf = len(self.totaltracks)
-            if zf < 2: zf = 2
-        self._metadata[u"tracknumber"] = self._metadata[u"tracknumber"].zfill(zf)
+        if u"TRACK NUMBER" in self:
+            self[u"TRACK NUMBER"] = value
+        else:
+            self[u"TRACKNUMBER"] = value
 
     @tracknumber.deleter
     def tracknumber(self):
-        del self._metadata[u"tracknumber"]
+        if u"TRACK NUMBER" in self:
+            del self[u"TRACK NUMBER"]
+        else:
+            del self[u"TRACKNUMBER"]
 
     @property
     def totaltracks(self):
@@ -261,258 +255,6 @@ class Track(Meta):
                 self.set_tag(u"albumartist", self.get_tag(u"album artist"))
 
 
-class Album(list):
-
-    def __init__(self, name=None, tracks=None):
-        self.name = None
-
-        if tracks:
-            self.extend(tracks)
-
-    def extend(self, tracks):
-        for track in tracks:
-            self.check_name(track.album)
-            list.append(self, track)
-        sortedList = sorted(self, key=lambda t: int(t.tracknumber))
-        for i in xrange(len(sortedList)):
-            self[i] = sortedList[i]
-        self._fix_discnumber()
-        self._fix_tracknumber()
-
-    def append(self, track):
-        self.check_name(track.album)
-        list.append(self, track)
-        sortedList = sorted(self, key=lambda t: int(t.tracknumber))
-        for i in xrange(len(sortedList)):
-            self[i] = sortedList[i]
-        self._fix_discnumber()
-        self._fix_tracknumber()
-
-    def check_name(self, name):
-        if self.name is not None:
-            if name != self.name:
-                raise ValueError("Track not belong the album %s" % self.name)
-        else:
-            self.name = name
-
-    def update_tag(self, tag, value):
-        for track in self:
-            track.set_tag(tag, value)
-
-    def get_track(self, track_num):
-        for track in self:
-            if not track.has_tag(u"tracknumber"):
-                continue
-            if int(track.tracknumber) == int(track_num):
-                return track
-        return None
-
-    def update_all_tracks(self, meta, mode=DEFAULT):
-        for track in self:
-            track.update(meta, mode)
-        if meta.has_tag(u"album"):
-            self.name = meta.get_tag(u"album")
-
-    def detail(self):
-        lines = [u"==== Album : %s ====" % self.name]
-        for track in self:
-            lines.append(u" == Track : %s ==" % track.tracknumber)
-            for line in track.detail():
-                lines.append(u"   %s" % line)
-        return lines
-
-    def _fix_discnumber(self):
-        max_discnumber = 1
-        for track in self:
-            if track.has_tag(u"discnumber"):
-                if int(track.discnumber) > max_discnumber:
-                    max_discnumber = int(track.discnumber)
-        if max_discnumber > 1:
-            if not track.has_tag(u"discnumber"):
-                raise ValueError("Some track don't have discnumber in multi-disc album")
-            track.totaldiscs = unicode(max_discnumber)
-        else:
-            track.remove_tag(u"discnumber")
-            track.remove_tag(u"totaldiscs")
-            track.refresh_discnumber()
-
-    def _fix_tracknumber(self):
-        max_tracknumber = 1
-        for track in self:
-            if int(track.tracknumber) > max_tracknumber:
-                max_tracknumber = int(track.tracknumber)
-        for track in self:
-            track.totaltracks = max_tracknumber
-            track.refresh_tracknumber()
-
-
-class AlbumList(dict):
-
-    def __init__(self, albums=[], tracks=[]):
-        self.extend_albums(albums)
-        self.extend_tracks(tracks)
-
-    def extend_albums(self, albums):
-        for album in albums:
-            if album.name in self:
-                self[album.name].append(album)
-            else:
-                self[album.name] = album
-
-    def add_album(self, album):
-        if album.name in self:
-            self[album.name].append(album)
-        else:
-            self[album.name] = album
-
-    def extend_tracks(self, tracks):
-        for track in tracks:
-            self.add_track(track)
-
-    def add_track(self, track):
-        if track.album in self:
-            self[track.album].append(track)
-        else:
-            self[track.album] = Album(track.album, [track])
-
-    def fix_album_names(self):
-        changed_keys = set()
-
-        for key in self.keys():
-            if self[key].name != key:
-                changed_keys.add(key)
-
-        for key in changed_keys:
-            self[self[key].name] = self[key]
-            del self[key]
-
-
-def parse_cue(filename, encoding=None):
-    """
-    The CUE file shall be UTF-8 without BOM"
-    """
-    filename = _cue_format_convert(filename, encoding=encoding)
-    states = []
-    textline = ""
-    al = AlbumList()
-
-    def _m(match, key):
-        return trim_quote(match.groupdict()[key].strip())
-
-    def _extract_meta(tag):
-        newmeta = Track()
-        for s in states:
-            newmeta.set_tag(s[0], s[1])
-        while len(states) > 0:
-            if states[-1][0] == tag:
-                break
-            states.pop()
-        if len(states) > 1:
-            states.pop()
-        al.add_track(newmeta)
-
-    def _push(tag, value):
-        for s in states:
-            if tag == s[0] and tag in [u"original_file", u"tracknumber"]:
-                _extract_meta(tag)
-                break
-        states.append((tag, value))
-
-    def _has_tag(tag):
-        for x in states:
-            if x[0] == tag:
-                return True
-        return False
-
-    def _match_rem():
-        r = re.search('''REM\s+(?P<rem_tag>[^\s]+)\s+(?P<rem_value>.+)''',
-                      textline)
-
-        if not r: return False
-
-        _tag = u(_m(r, "rem_tag")).lower()
-        _value = u(_m(r, "rem_value"))
-
-        _push(_tag, _value)
-        return True
-
-    def _match_performer():
-        r = re.search('''PERFORMER\s+(?P<performer>.+)$''',
-                      textline)
-
-        if not r: return False
-
-        _perf = u(_m(r, "performer"))
-
-        if not _has_tag(u"tracknumber"):
-            _push(u"albumartist", _perf)
-        else:
-            _push(u"artist", _perf)
-        return True
-
-    def _match_title():
-        r = re.search('''TITLE\s+(?P<title>.+)''',
-                      textline)
-
-        if not r: return False
-
-        _title = u(_m(r, "title"))
-
-        if not _has_tag(u"tracknumber"):
-            _push(u"album", _title)
-        else:
-            _push(u"title", _title)
-        return True
-
-    def _match_file():
-        r = re.search('''FILE\s+(?P<file>.+)\s+\w+''',
-                      textline)
-
-        if not r: return False
-
-        _file = u(_m(r, "file"))
-
-        _push(u"original_file", _file)
-        return True
-
-    def _match_track():
-        r = re.search('''TRACK\s+(?P<track_num>\d+)\s+AUDIO''',
-                      textline)
-
-        if not r: return False
-
-        _track = u(int(_m(r, "track_num")))
-
-        _push(u"tracknumber", _track)
-        return True
-
-    def _match_index():
-        r = re.search('''INDEX\s+(?P<index_num>\d+)\s+(?P<timing>.+)''',
-                      textline)
-
-        if not r: return False
-
-        _index_num = u(_m(r, "index_num"))
-        _timing = u(_m(r, "timing"))
-
-        _push(u"index_%s" % _index_num, _timing)
-        return True
-
-    fp = open(filename, "r")
-    for textline in fp:
-        if _match_file(): continue
-        if _match_index(): continue
-        if _match_performer(): continue
-        if _match_rem(): continue
-        if _match_title(): continue
-        if _match_track(): continue
-
-    _extract_meta(0)
-
-    fp.close()
-    return al
-
-
 def parse_ini(filename):
     cp = ConfigParser()
     cp.read(filename)
@@ -534,6 +276,11 @@ def parse_ini(filename):
         metas.append(meta)
 
     return metas
+
+
+def print_metas(metas):
+    for meta in metas:
+        print(meta.to_string())
 
 
 def _cue_format_convert(filename, encoding=None):
