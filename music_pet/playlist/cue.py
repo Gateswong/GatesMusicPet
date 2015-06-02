@@ -2,6 +2,7 @@
 
 import re
 import codecs
+from collections import defaultdict
 
 from ..utils import trim_quote, read_file, to_unicode as u
 from ..meta import Meta
@@ -54,6 +55,65 @@ class _CUEParseHandle(object):
 
     def finish(self):
         self.extract()
+        self.set_begin_time()
+        self.analyse_time()
+
+    def build_time_table(self):
+        """
+        Build a time table which each item has time and its tracknumber.
+        """
+        time_table = defaultdict(set)
+        for meta in self.metas:
+            if u"_time_begin" in meta:
+                time_table[meta[u"_file"]].add(meta[u"_time_begin"])
+
+        for _f, _l in time_table.items():
+            time_table[_f] = sorted(_l, key=_cue_time_to_int)
+
+        return time_table
+
+    def analyse_time(self):
+        """
+        Analyse the time in all metas.
+        """
+        time_table = self.build_time_table()
+
+        for meta in self.metas:
+            if meta[u"_file"] not in time_table:
+                continue
+
+            if u"_time_begin" in meta:
+                index = time_table[meta[u"_file"]].index(meta[u"_time_begin"])
+                if index == len(time_table[meta[u"_file"]]) - 1:
+                    continue
+                meta[u"_time_end"] = time_table[meta[u"_file"]][index + 1]
+
+    def set_begin_time(self):
+        for meta in self.metas:
+            _set_meta_begin_time(meta)
+
+
+def _set_meta_begin_time(meta):
+    if not isinstance(meta, Meta):
+        raise TypeError("Only Meta instance is allowed")
+
+    if u"INDEX 00" in meta:
+        meta[u"_time_begin"] = meta[u"INDEX 00"]
+    elif u"INDEX 01" in meta:
+        meta[u"_time_begin"] = meta[u"INDEX 01"]
+    else:
+        meta[u"_time_begin"] = u"00:00:00"
+
+
+def _cue_time_to_int(cue_time):
+    """
+    Convert an item from time table, take the CUE time and convert it to integer.
+    """
+    r = re.match(u'''(\d+):(\d{2}):(\d{2})''', cue_time)
+    if r is None:
+        raise ValueError("Invalid CUE Time: %s" % cue_time)
+
+    return int(u"%s%s%s" % r.groups())
 
 
 def _matched_line_rem(textline, cue_handle):
@@ -151,6 +211,7 @@ def parse_cue(filename, encoding="utf_8"):
         if _matched_line_index(textline, cue_handle): continue
 
     cue_handle.finish()
+    cue_handle.analyse_time()
 
     return cue_handle.metas
 

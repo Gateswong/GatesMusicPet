@@ -3,7 +3,7 @@ import unittest
 import os
 
 
-class TestOnParseCUEFile(unittest.TestCase):
+class UnitTest_music_pet__playlist__CUE(unittest.TestCase):
 
     def setUp(self):
         return
@@ -30,7 +30,9 @@ class TestOnParseCUEFile(unittest.TestCase):
                 u'TITLE': u'\u3055\u3088\u306a\u3089',
                 u'TRACKNUMBER': u'1',
                 u'_file': u'CDImage.flac',
-                u'_source': u'CUE'
+                u'_source': u'CUE',
+                u'_time_begin':u'00:00:00',
+                u'_time_end':u'03:20:54'
             }, {
                 u'ALBUM': u'Good Morning \u7cbe\u9009\u96c6',
                 u'ALBUMARTIST': u'\u611b\u73a9\u9b42\u6597\u7f85\u7684\u72c2\u4eba',
@@ -43,7 +45,9 @@ class TestOnParseCUEFile(unittest.TestCase):
                 u'TITLE': u'\u6b4c',
                 u'TRACKNUMBER': u'2',
                 u'_file': u'CDImage.flac',
-                u'_source': u'CUE'
+                u'_source': u'CUE',
+                u'_time_begin':u'03:20:54',
+                u'_time_end':u'06:16:15'
             }, {
                 u'ALBUM': u'Good Morning \u7cbe\u9009\u96c6',
                 u'ALBUMARTIST': u'\u611b\u73a9\u9b42\u6597\u7f85\u7684\u72c2\u4eba',
@@ -56,7 +60,9 @@ class TestOnParseCUEFile(unittest.TestCase):
                 u'TITLE': u'\u4e27\u5fc3\u75c5\u72c2',
                 u'TRACKNUMBER': u'3',
                 u'_file': u'CDImage.flac',
-                u'_source': u'CUE'
+                u'_source': u'CUE',
+                u'_time_begin':u'06:16:15',
+                u'_time_end':u'12:38:49'
             }, {
                 u'ALBUM': u'Good Morning \u7cbe\u9009\u96c6',
                 u'ALBUMARTIST': u'\u611b\u73a9\u9b42\u6597\u7f85\u7684\u72c2\u4eba',
@@ -69,7 +75,8 @@ class TestOnParseCUEFile(unittest.TestCase):
                 u'TITLE': u'\uff5e\u770b\u4e0d\u5230\u770b\u4e0d\u5230\u770b\u4e0d\u5230\uff01',
                 u'TRACKNUMBER': u'4',
                 u'_file': u'CDImage.flac',
-                u'_source': u'CUE'
+                u'_source': u'CUE',
+                u'_time_begin':u'12:38:49'
             }
         ]
 
@@ -96,7 +103,8 @@ class TestOnParseCUEFile(unittest.TestCase):
                 u'DATE': u'2011',
                 u'TRACKNUMBER': u'1',
                 u'_file': u'TRACK01.wav',
-                u'_source': u'CUE'
+                u'_source': u'CUE',
+                u'_time_begin':u'00:00:00'
             }, {
                 u'COMMENT': u'ExactAudioCopy v1.0b3',
                 u'ALBUM': u'No zuo no die why you try.',
@@ -108,7 +116,8 @@ class TestOnParseCUEFile(unittest.TestCase):
                 u'DATE': u'2011',
                 u'TRACKNUMBER': u'2',
                 u'_file': u'TRACK02.wav',
-                u'_source': u'CUE'
+                u'_source': u'CUE',
+                u'_time_begin':u'00:00:00'
             }, {
                 u'COMMENT': u'ExactAudioCopy v1.0b3',
                 u'ALBUM': u'No zuo no die why you try.',
@@ -121,7 +130,8 @@ class TestOnParseCUEFile(unittest.TestCase):
                 u'DATE': u'2011',
                 u'TRACKNUMBER': u'3',
                 u'_file': u'TRACK03.wav',
-                u'_source': u'CUE'
+                u'_source': u'CUE',
+                u'_time_begin':u'00:00:00'
             }, {
                 u'COMMENT': u'ExactAudioCopy v1.0b3',
                 u'ALBUM': u'No zuo no die why you try.',
@@ -133,7 +143,8 @@ class TestOnParseCUEFile(unittest.TestCase):
                 u'DATE': u'2011',
                 u'TRACKNUMBER': u'4',
                 u'_file': u'TRACK04.wav',
-                u'_source': u'CUE'
+                u'_source': u'CUE',
+                u'_time_begin':u'00:00:00'
             }, {
                 u'COMMENT': u'ExactAudioCopy v1.0b3',
                 u'ALBUM': u'No zuo no die why you try.',
@@ -145,183 +156,13 @@ class TestOnParseCUEFile(unittest.TestCase):
                 u'DATE': u'2011',
                 u'TRACKNUMBER': u'5',
                 u'_file': u'TRACK05.wav',
-                u'_source': u'CUE'
+                u'_source': u'CUE',
+                u'_time_begin':u'00:00:00'
             }
         ]
 
         for i in xrange(len(metas)):
             self.assertEqual(metas[i]._metadata, expected_metas[i])
-
-    def test_INI_utf8(self):
-        from music_pet import meta
-
-        CUE_FILE = u"testfiles/CUETestFile2.utf8.cue"
-        INPUT_FILE = u"testfiles/INITestFile1.ini"
-
-        metas = meta.parse_ini(INPUT_FILE)
-        album_list = meta.parse_cue(CUE_FILE)
-
-        for m in metas:
-            for album in album_list.values():
-                album.update_all_tracks(m)
-
-        albums = [[x.data for x in y] for y in album_list.values()]
-
-        albums_names_expected = [u'No zuo no die why you try.']
-        albums_expected = [
-            [
-                {
-                    u'comment': u'ExactAudioCopy v1.0b3, extra comments ~~~',
-                    u'album': u'No zuo no die why you try.',
-                    u'index_01': u'00:00:00',
-                    u'discid': u'FF30FB07',
-                    u'title': u'Peace War Found',
-                    u'index_02': u'03:56:24',
-                    u'artist': u'LOL',
-                    u'totaltracks': u'5',
-                    u'albumartist': u'押す！',
-                    u'date': u'2011',
-                    u'tracknumber': u'01',
-                    u'genre': u'Soundtrack',
-                    u'original_file': u'TRACK01.wav'
-                }, {
-                    u'comment': u'ExactAudioCopy v1.0b3, extra comments ~~~',
-                    u'album': u'No zuo no die why you try.',
-                    u'index_01': u'00:00:00',
-                    u'discid': u'FF30FB07',
-                    u'title': u'GOGOGOGO',
-                    u'index_02': u'04:57:68',
-                    u'artist': u'No Name',
-                    u'totaltracks': u'5',
-                    u'albumartist': u'押す！',
-                    u'date': u'2011',
-                    u'tracknumber': u'02',
-                    u'genre': u'Soundtrack',
-                    u'original_file': u'TRACK02.wav'
-                }, {
-                    u'comment': u'ExactAudioCopy v1.0b3, extra comments ~~~',
-                    u'album': u'No zuo no die why you try.',
-                    u'index_01': u'00:00:00',
-                    u'totaltracks': u'5',
-                    u'discid': u'FF30FB07',
-                    u'title': u'麻麻请再打我一次',
-                    u'index_02': u'04:38:13',
-                    u'artist': u'No Name',
-                    u'genre': u'Pop, Soundtrack',
-                    u'albumartist': u'押す！',
-                    u'date': u'2011',
-                    u'tracknumber': u'03',
-                    u'original_file': u'TRACK03.wav'
-                }, {
-                    u'comment': u'ExactAudioCopy v1.0b3, extra comments ~~~',
-                    u'album': u'No zuo no die why you try.',
-                    u'index_01': u'00:00:00',
-                    u'discid': u'FF30FB07',
-                    u'title': u'duang~',
-                    u'index_02': u'03:38:54',
-                    u'artist': u'No Name',
-                    u'totaltracks': u'5',
-                    u'albumartist': u'押す！',
-                    u'date': u'2011',
-                    u'tracknumber': u'04',
-                    u'genre': u'Soundtrack',
-                    u'original_file': u'TRACK04.wav'
-                }, {
-                    u'comment': u'ExactAudioCopy v1.0b3, extra comments ~~~',
-                    u'album': u'No zuo no die why you try.',
-                    u'index_01': u'00:00:00',
-                    u'discid': u'FF30FB07',
-                    u'title': u'Hmmmm...',
-                    u'index_02': u'05:00:01',
-                    u'artist': u'No Name',
-                    u'totaltracks': u'5',
-                    u'albumartist': u'押す！',
-                    u'date': u'2011',
-                    u'tracknumber': u'05',
-                    u'genre': u'Soundtrack',
-                    u'original_file': u'TRACK05.wav'
-                }
-            ]
-        ]
-
-        self.assertEqual(album_list.keys(), albums_names_expected)
-        self.assertEqual(albums, albums_expected)
-
-
-class UnitTest_music_pet__meta__Track(unittest.TestCase):
-
-    def setUp(self):
-        return
-
-    def tearDown(self):
-        return
-
-    def test_tracknumber_1(self):
-        from music_pet.meta import Track
-
-        t = Track()
-        t.tracknumber = 1
-        self.assertEqual(t.tracknumber, u"01")
-
-    def test_tracknumber_2(self):
-        from music_pet.meta import Track
-
-        t = Track()
-        t.tracknumber = 14
-        self.assertEqual(t.tracknumber, u"14")
-
-    def test_tracknumber_4(self):
-        from music_pet.meta import Track
-
-        t = Track()
-        t.tracknumber = 143
-        self.assertEqual(t.tracknumber, u"143")
-
-    def test_tracknumber_3(self):
-        from music_pet.meta import Track
-
-        t = Track()
-        t.totaltracks = 1024
-        t.tracknumber = 14
-        self.assertEqual(t.tracknumber, u"0014")
-
-    def test_tracknumber_2(self):
-        from music_pet.meta import Track
-
-        t = Track()
-        t.tracknumber = 14
-        t.totaltracks = 1024
-        t.refresh_tracknumber()
-        self.assertEqual(t.tracknumber, u"0014")
-
-
-class UnitTest_music_pet__audio__flac__FLAC(unittest.TestCase):
-
-    def setUp(self):
-        return
-
-    def tearDown(self):
-        return
-
-    def test_set_next_start_time_from_album(self):
-        from music_pet.meta import Track, Album
-        from music_pet.audio.flac import FLAC
-
-        t1 = Track()
-        t1.tracknumber = 1
-        t1.set_tag(u"index_00", u"00:00:00")
-        t1.set_tag(u"original_file", u"CDImage.flac")
-        t2 = Track()
-        t2.tracknumber = 2
-        t2.set_tag(u"index_00", u"00:03:01")
-        t2.set_tag(u"original_file", u"CDImage.flac")
-        a = Album(tracks=[t1, t2])
-
-        f = FLAC(t1.data)
-        f.set_next_start_time_from_album(a)
-
-        self.assertTrue(f.has_tag(u"@time_to"))
-        print(f.metadata.detail())
 
 
 class UnitTest_music_pet__utils__path_from_pattern(unittest.TestCase):
