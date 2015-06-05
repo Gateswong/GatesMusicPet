@@ -192,19 +192,6 @@ def command_copy_to(files, folder, base_command=u"cp"):
     return u" ".join(arguments)
 
 
-def cue_index_to_flac_time(timestr):
-    """
-    This function converts the time string in CUE file to the format that FLAC accepts.
 
-    Time string in CUE file:  00:00:00
-
-    Time string in FLAC file: 00:00.00
-    """
-    r = re.match(u'''(\d+:\d{2}):(\d{2})''', timestr)
-    if r is None:
-        raise ValueError("Invalid time string: %s" % timestr)
-
-    g = r.groups()
-    return u'''%s.%s''' % (g[0], g[1])
 
 

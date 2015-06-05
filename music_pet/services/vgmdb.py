@@ -4,7 +4,13 @@ import requests
 import json
 import re
 
-from ..meta import Album
+from ..audio import Track
+
+
+LANGS = {
+    u"jp": (u"jp", u"Japanese"),
+    u"en": (u"en", u"English"),
+}
 
 
 def _get_json_by_link(link):
@@ -13,7 +19,7 @@ def _get_json_by_link(link):
 
 
 def _get_json(url):
-    resp = requests.get(url)
+    resp = requests.get(url, timeout=5)
     if resp.status_code != 200:
         raise Exception("Failed to search from VGMdb! Error Code = %d" % resp.status_code)
 
@@ -95,36 +101,87 @@ def get_event(id):
     return d
 
 
+# Utility
+def disc(num):
+    return u"Disc %s" % num
+
+
 # Functions that producing data from JSON (dict)
-def url_for_album_cover_picture(album_info, size="full"):
+def album_get_cover_picture(album_info, size="full"):
     if u"covers" not in album_info:
         return None
 
     for cover_dict in album_info[u"covers"]:
         if cover_dict[u"name"].lower() in [u"front", u"cover", u"folder"]:
-            return cover_dict[u"full"]
+            return cover_dict[size]
 
 
-def album_tracks(album_info, lang=u"English"):
-    if u"discs" not in album_info:
-        return {}
+def album_tracks(album_info, discname, lang=u"en"):
+    for disc in album_info[u"discs"]:
+        if disc[u"name"] == discname:
+            tracks = []
+            for track in disc[u"tracks"]:
+                tracks.append(track[u"names"].get(
+                    LANGS[lang][1],
+                    track[u"names"][u"English"]
+                ))
+            return tracks
 
-    discs = {}
 
-    for disc_dict in album_info[u"discs"]:
-        r = re.match(u'''Disc (\d+)''', disc_dict[u"name"])
-        if not r:
-            disc_num = disc_dict[u"name"]
-        else:
-            disc_num = r.groups()[0]
-        discs[disc_num] = []
+def update(album_info, track, lang=u"en"):
+    if not isinstance(track, Track):
+        raise TypeError("Instance is not a Meta object")
 
-        for track in disc_dict[u"tracks"]:
-            if lang not in track[u"names"]:
-                raise ValueError("Can't find track info with language: %s" % lang)
-            discs[disc_num].append(track[u"names"][lang])
+    update_album_title(album_info, track, lang=lang)
+    # update_artist(album_info, track, lang=lang)
+    update_album_artist(album_info, track, lang=lang)
+    update_catalog(album_info, track, lang=lang)
+    update_category(album_info, track, lang=lang)
+    update_cover_picture(album_info, track, lang=lang)
+    update_title(album_info, track, lang=lang)
 
-    return discs
+    return
+
+
+def update_album_title(album_info, track, lang=u"en"):
+    track.ALBUM = album_info[u"names"].get(
+        LANGS[lang][0],
+        album_info[u"names"][u"en"]
+    )
+
+
+def update_album_artist(album_info, track, lang=u"en"):
+    composers = u""
+    for composer in album_info[u"composers"]:
+        composers += u", %s" % composer[u"names"].get(
+            LANGS[lang][0],
+            composer[u"names"][u"en"]
+        )
+    track.ALBUMARTIST = composers[2:]
+
+
+def update_catalog(album_info, track, lang=u"en"):
+    if u"catalog" in album_info:
+        track[u"CATALOG"] = album_info[u"catalog"]
+
+
+def update_category(album_info, track, lang=u"en"):
+    if u"category" in album_info:
+        track[u"CATEGORY"] = album_info[u"category"]
+
+
+def update_cover_picture(album_info, track, lang=u"en"):
+    track[u"_picture"] = album_get_cover_picture(album_info)
+
+
+def update_title(album_info, track, lang=u"en"):
+    if track.DISCNUMBER is None:
+        discname = u"Disc 1"
+    else:
+        discname = disc(track.DISCNUMBER)
+
+    track_names = album_tracks(album_info, discname, lang=lang)
+    track.TITLE = track_names[int(track.TRACKNUMBER) - 1]
 
 
 def album_detail(album_info, lang=u"English", lang_short=u"en"):
@@ -151,28 +208,6 @@ def album_detail(album_info, lang=u"English", lang_short=u"en"):
                 track[u"names"][lang] if lang in track[u"names"] else track[u"names"]["English"])
 
     return detail_string
-
-
-# Functions that working with other modules
-def update_album(album_info, album, lang=u"English"):
-    if not isinstance(album, Album):
-        raise TypeError("update_album only accepts instance of Album")
-
-    discs = album_tracks(album_info, lang=lang)
-
-    # First pass: Assume all tracks info exists in the result from vgmdb.
-    for track in album:
-        if int(track.discnumber) not in discs:
-            raise ValueError("Can't find the track info from the result of vgmdb.")
-
-        if int(track.tracknumber) > len(discs[int(track.discnumber)]):
-            raise ValueError("Can't find the track info from the result of vgmdb.")
-
-    # Second pass: Update all tracks' info.
-    for track in album:
-        track.title = discs[int(track.discnumber)][int(track.tracknumber)-1]
-
-    return
 
 
 # Functions for details
