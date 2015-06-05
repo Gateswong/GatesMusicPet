@@ -4,7 +4,7 @@ import requests
 import json
 import re
 
-from ..audio import Track
+from ..audio import AudioTrack
 
 
 LANGS = {
@@ -129,7 +129,7 @@ def album_tracks(album_info, discname, lang=u"en"):
 
 
 def update(album_info, track, lang=u"en"):
-    if not isinstance(track, Track):
+    if not isinstance(track, AudioTrack):
         raise TypeError("Instance is not a Meta object")
 
     update_album_title(album_info, track, lang=lang)
